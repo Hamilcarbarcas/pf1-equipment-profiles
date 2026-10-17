@@ -1,23 +1,15 @@
 {{#*inline "pepSlot"}}
-<div class="pep-slot-row">
-  <div class="pep-slot {{state}}{{#if selected}} selected{{/if}}{{#if locked}} locked{{/if}}{{#if missing}} missing{{/if}}"
-       data-slot="{{key}}" data-action="selectSlot" data-drop="{{key}}" data-tooltip="{{tooltip}}"
-       {{#if img}}draggable="true" data-drag="slot"{{/if}}>
-    {{#if img}}<img src="{{img}}" alt="">
-    {{else if (eq state "empty")}}<i class="fa-solid fa-ban pep-slot-glyph" inert></i>
-    {{else}}<i class="fa-solid {{icon}} pep-slot-glyph" inert></i>{{/if}}
-    {{#if missing}}<i class="fa-solid fa-triangle-exclamation pep-badge" inert></i>{{/if}}
-    {{#if locked}}<i class="fa-solid fa-lock pep-badge" inert></i>{{/if}}
-  </div>
-  <span class="pep-caption {{state}}">{{caption}}</span>
-  {{#if grip}}
-  <button type="button" class="pep-grip" data-action="toggleHeld" {{#if grip.fixed}}disabled{{/if}}
-          data-tooltip="PF1EP.Window.GripHint">{{grip.label}}</button>
-  {{/if}}
+<div class="pep-slot {{state}}{{#if filled}} filled{{/if}}{{#if mirror}} mirror{{/if}}{{#if missing}} missing{{/if}}{{#if disabled}} slot-off{{/if}}"
+     data-slot="{{key}}" data-action="selectSlot" {{#unless disabled}}data-drop="{{key}}"{{/unless}} data-tooltip="{{tooltip}}"
+     {{#if drag}}draggable="true" data-drag="slot"{{/if}}>
+  {{#if img}}<img class="pep-item-img" src="{{img}}" alt="">{{else}}{{{glyph}}}{{/if}}
+  {{#if (eq state "empty")}}<i class="fa-solid fa-ban pep-empty-mark" inert></i>{{/if}}
+  {{#if missing}}<i class="fa-solid fa-triangle-exclamation pep-badge" inert></i>{{/if}}
 </div>
 {{/inline}}
 
-<div class="pep-ew">
+<div class="pep-ew {{#if live}}live{{else}}profile{{/if}}" data-actor-uuid="{{actorUuid}}">
+  {{#unless live}}
   <header class="pep-ew-header">
     <details class="pep-icon-picker">
       <summary data-tooltip="PF1EP.Window.Icon"><i class="{{draft.icon}}" inert></i></summary>
@@ -29,26 +21,53 @@
     </details>
     <input type="text" name="name" value="{{draft.name}}" placeholder="{{localize "PF1EP.Window.NamePlaceholder"}}">
   </header>
+  {{/unless}}
 
   <div class="pep-ew-body">
     <section class="pep-doll">
-      <div class="pep-col left">{{#each left}}{{> pepSlot}}{{/each}}</div>
+      <div class="pep-col left">
+        {{#each left}}
+        {{#if stack}}
+        <div class="pep-armor-stack{{#if over.filled}} open{{/if}}{{#if (eq over.state "empty")}} open{{/if}}{{#if armor.disabled}} slot-off{{/if}}">
+          {{#with over}}{{> pepSlot}}{{/with}}
+          {{#with armor}}{{> pepSlot}}{{/with}}
+        </div>
+        {{else}}
+        {{> pepSlot}}
+        {{/if}}
+        {{/each}}
+      </div>
+
       <div class="pep-center">
         <img class="pep-portrait" src="{{portrait}}" alt="">
-        <div class="pep-hands">{{#each hands}}{{> pepSlot}}{{/each}}</div>
       </div>
+
       <div class="pep-col right">{{#each right}}{{> pepSlot}}{{/each}}</div>
+
+      <div class="pep-hands">
+        {{#with main}}{{> pepSlot}}{{/with}}
+        {{#if link}}
+        <a class="pep-link{{#if link.twoHanded}} on{{/if}}{{#if link.fixed}} fixed{{/if}}"
+           {{#unless link.fixed}}data-action="toggleHeld"{{/unless}} data-tooltip="{{link.tooltip}}">
+          <i class="fa-solid {{#if link.twoHanded}}fa-link{{else}}fa-link-slash{{/if}}" inert></i>
+        </a>
+        {{else}}
+        <span class="pep-link placeholder"></span>
+        {{/if}}
+        {{#with off}}{{> pepSlot}}{{/with}}
+      </div>
     </section>
 
     <aside class="pep-items">
       <input type="search" class="pep-filter" value="{{filterText}}" placeholder="{{localize "PF1EP.Window.Filter"}}">
       <div class="pep-item-list">
         {{#each groups}}
-        <div class="pep-group" {{#if hidden}}hidden{{/if}}>
+        <div class="pep-group">
           <h4>{{localize label}}</h4>
           {{#each items}}
-          <div class="pep-item{{#if misfit}} misfit{{/if}}{{#if assigned}} assigned{{/if}}" data-item-id="{{id}}" data-uuid="{{uuid}}"
-               data-name="{{name}}" data-action="assignItem" draggable="true" data-drag="item" {{#if hidden}}hidden{{/if}}>
+          <div class="pep-item{{#if assigned}} assigned{{/if}}{{#if blocked}} blocked{{/if}}" data-item-id="{{id}}" data-uuid="{{uuid}}"
+               {{#if blocked}}data-tooltip="{{blockedHint}}"{{/if}}
+               data-name="{{name}}" data-slots="{{slots}}" data-action="assignItem" draggable="true" data-drag="item">
             <img src="{{img}}" alt="">
             <span class="pep-item-name">{{name}}</span>
             {{#if equipped}}<i class="fa-solid fa-check pep-equipped" data-tooltip="PF1.Equipped" inert></i>{{/if}}
@@ -60,24 +79,29 @@
     </aside>
   </div>
 
-  <section class="pep-other{{#if otherSelected}} selected{{/if}}" data-drop="other">
-    <h4 data-action="selectSlot" data-slot="other">{{localize "PF1EP.Window.Other"}}</h4>
-    <div class="pep-other-grid">
-      {{#each other}}
+  <section class="pep-bottom">
+    {{#each bars}}
+    <div class="pep-other pep-bar-{{key}}{{#if disabled}} slot-off{{/if}}" {{#unless disabled}}data-drop="{{key}}"{{/unless}} data-slot="{{key}}">
+      <a class="pep-other-label" data-action="selectSlot" data-slot="{{key}}" data-tooltip="{{hint}}">
+        <i class="fa-solid {{icon}}" inert></i>
+      </a>
+      {{#each entries}}
       <div class="pep-other-entry{{#if missing}} missing{{/if}}{{#unless equipped}} off{{/unless}}" draggable="true" data-drag="other" data-index="{{index}}" data-tooltip="{{name}}">
         {{#if img}}<img src="{{img}}" alt="">{{else}}<i class="fa-solid fa-triangle-exclamation" inert></i>{{/if}}
+        {{#unless @root.live}}
         <button type="button" class="pep-other-toggle" data-action="toggleOther" data-index="{{index}}"
                 data-tooltip="{{#if equipped}}PF1EP.Window.OtherEquip{{else}}PF1EP.Window.OtherUnequip{{/if}}">
           <i class="fa-solid {{#if equipped}}fa-check{{else}}fa-xmark{{/if}}" inert></i>
         </button>
-        <button type="button" class="pep-other-remove" data-action="removeOther" data-index="{{index}}" data-tooltip="PF1EP.Window.Remove">
-          <i class="fa-solid fa-eraser" inert></i>
+        {{/unless}}
+        <button type="button" class="pep-other-remove" data-action="removeOther" data-index="{{index}}"
+                data-tooltip="{{#if @root.live}}PF1EP.Window.Unequip{{else}}PF1EP.Window.Remove{{/if}}">
+          <i class="fa-solid fa-xmark" inert></i>
         </button>
       </div>
-      {{else}}
-      <p class="hint">{{localize "PF1EP.Window.OtherHint"}}</p>
       {{/each}}
     </div>
+    {{/each}}
   </section>
 
   {{#if warnings.length}}
@@ -87,11 +111,20 @@
   {{/if}}
 
   <footer class="pep-ew-footer">
+    {{#if live}}
+    <select class="pep-profile-select"{{#unless hasProfiles}} disabled{{/unless}}>
+      {{#each profiles}}<option value="{{id}}"{{#if selected}} selected{{/if}}>{{#if current}}✓ {{/if}}{{name}}</option>{{/each}}
+    </select>
+    <button type="button" data-action="equipProfile"{{#unless hasProfiles}} disabled{{/unless}}><i class="fa-solid fa-shirt" inert></i> {{localize "PF1EP.Controls.Equip"}}</button>
+    <button type="button" data-action="saveToProfile"{{#unless hasProfiles}} disabled{{/unless}}><i class="fa-solid fa-floppy-disk" inert></i> {{localize "PF1EP.Live.SaveToProfile"}}</button>
+    <button type="button" data-action="saveAsNew"><i class="fa-solid fa-plus" inert></i> {{localize "PF1EP.Live.SaveAsNew"}}</button>
+    {{else}}
     <button type="button" data-action="fromCurrent"><i class="fa-solid fa-user-check" inert></i> {{localize "PF1EP.Window.FromCurrent"}}</button>
     <button type="button" data-action="clear"><i class="fa-solid fa-eraser" inert></i> {{localize "PF1EP.Window.Clear"}}</button>
     {{#unless isNew}}
     <button type="button" data-action="remove"><i class="fa-solid fa-trash" inert></i> {{localize "PF1EP.Window.Delete"}}</button>
     {{/unless}}
-    <button type="button" class="pep-save" data-action="save"><i class="fa-solid fa-floppy-disk" inert></i> {{localize "PF1EP.Window.Save"}}</button>
+    <button type="button" data-action="save"><i class="fa-solid fa-floppy-disk" inert></i> {{localize "PF1EP.Window.Save"}}</button>
+    {{/if}}
   </footer>
 </div>

@@ -3,6 +3,7 @@
  */
 
 import { blankSlots, itemRef } from "./store.mjs";
+import { blockingToggle, disabledSet, isOff } from "./actor-slots.mjs";
 import { RINGS, isShield, liveHeld, occupancy } from "./slots.mjs";
 
 const itemSlot = (item, held = null) => ({ state: "item", item: itemRef(item), held });
@@ -31,6 +32,17 @@ export function capture(actor) {
 
   occ.rings.slice(0, 2).forEach((ring, i) => (slots[RINGS[i]] = itemSlot(ring)));
   for (const item of occ.other) other.push({ item: itemRef(item), equipped: true });
+
+  // Disabled slots (§3.7) stay Ignore even when something was equipped there before.
+  const disabled = disabledSet(actor);
+  if (disabled.size) {
+    for (const key of Object.keys(slots)) if (isOff(key, disabled)) slots[key] = blankSlots()[key];
+    const keep = other.filter((o) => {
+      const item = actor.items.get(o.item.id);
+      return !item || !blockingToggle(item, disabled);
+    });
+    other.splice(0, other.length, ...keep);
+  }
 
   return { slots, other };
 }

@@ -1,0 +1,38 @@
+{{#*inline "pepStyleSlot"}}
+<div class="pep-style-slot{{#if custom}} custom{{/if}}" data-slot="{{key}}" data-action="pickImage" data-tooltip="{{label}}">
+  {{{glyph}}}
+</div>
+{{/inline}}
+
+<div class="pep-sc">
+  <div class="pep-sc-body">
+    <div class="pep-sc-col">{{#each left}}{{> pepStyleSlot}}{{/each}}</div>
+
+    <div class="pep-sc-center">
+      <p class="notes">{{localize "PF1EP.StyleConfig.HintPick"}}</p>
+      <p class="notes">{{localize "PF1EP.StyleConfig.HintReset"}}</p>
+
+      <div class="form-group">
+        <label>{{localize "PF1EP.StyleConfig.Color"}}</label>
+        <div class="form-fields"><color-picker name="color" value="{{color}}"></color-picker></div>
+      </div>
+      <div class="form-group">
+        <label>{{localize "PF1EP.StyleConfig.Hue"}}</label>
+        <div class="form-fields"><range-picker name="hue" min="0" max="360" step="1" value="{{hue}}"></range-picker></div>
+      </div>
+      <div class="form-group">
+        <label class="checkbox"><input type="checkbox" name="tint"{{#if tint}} checked{{/if}}> {{localize "PF1EP.StyleConfig.Tint"}}</label>
+      </div>
+      <p class="notes">{{localize "PF1EP.StyleConfig.TintHint"}}</p>
+    </div>
+
+    <div class="pep-sc-col">{{#each right}}{{> pepStyleSlot}}{{/each}}</div>
+  </div>
+
+  <div class="pep-sc-bottom">{{#each bottom}}{{> pepStyleSlot}}{{/each}}</div>
+
+  <footer class="pep-sc-footer">
+    <button type="button" data-action="reset"><i class="fa-solid fa-rotate-left" inert></i> {{localize "PF1EP.StyleConfig.Reset"}}</button>
+    <button type="button" data-action="save"><i class="fa-solid fa-floppy-disk" inert></i> {{localize "PF1EP.Window.Save"}}</button>
+  </footer>
+</div>

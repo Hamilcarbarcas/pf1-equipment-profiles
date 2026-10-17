@@ -13,9 +13,10 @@ const pending = new Set();
 
 export const isPending = (actor) => pending.has(actor.uuid);
 
-/** Toggle the pending state on every rendered control row for this actor (§8.2). */
+/** Toggle the pending state on every rendered control row and equip window for this actor (§8.2). */
 function markPending(actor, on) {
-  for (const row of document.querySelectorAll(`.${CSS}controls[data-actor-uuid="${actor.uuid}"]`)) {
+  const selector = `.${CSS}controls[data-actor-uuid="${actor.uuid}"], .${CSS}ew[data-actor-uuid="${actor.uuid}"]`;
+  for (const row of document.querySelectorAll(selector)) {
     row.classList.toggle("pending", on);
     for (const el of row.querySelectorAll("button, select")) el.disabled = on;
   }
@@ -27,9 +28,10 @@ function markPending(actor, on) {
  * @param {object} [options]
  * @param {boolean} [options.gates=true]
  * @param {string} [options.source="api"]
+ * @param {boolean} [options.quiet=false] - No success toasts; warnings still show (live edits, §6.6).
  * @returns {Promise<object|null>} Result, or null when cancelled.
  */
-export async function applyProfile(actor, profile, { gates = true, source = "api" } = {}) {
+export async function applyProfile(actor, profile, { gates = true, source = "api", quiet = false } = {}) {
   if (!actor?.isOwner) {
     ui.notifications.warn("PF1EP.Warn.NotOwner", { localize: true });
     return null;
@@ -41,7 +43,7 @@ export async function applyProfile(actor, profile, { gates = true, source = "api
 
   const plan = buildPlan(actor, profile);
   if (!plan.changes.length) {
-    report(actor, profile, { changes: [], skipped: plan.skipped, missing: plan.missing, stale: [] });
+    report(actor, profile, { changes: [], skipped: plan.skipped, missing: plan.missing, stale: [] }, quiet);
     return { applied: false, changes: [], skipped: plan.skipped, missing: plan.missing };
   }
 
@@ -74,7 +76,7 @@ export async function applyProfile(actor, profile, { gates = true, source = "api
 
     const result = { applied: updates.length > 0, changes, skipped: plan.skipped, missing: plan.missing, stale };
     Hooks.callAll("pf1EquipmentProfiles.apply", actor, profile, result);
-    report(actor, profile, result);
+    report(actor, profile, result, quiet);
     if (result.applied && setting(KEYS.announce)) await announce(actor, profile, changes);
     return result;
   } finally {
@@ -88,18 +90,22 @@ function missingLabel({ ref, container }) {
   return container ? game.i18n.format("PF1EP.Report.InContainer", { item: name, container: container.name }) : name;
 }
 
-function report(actor, profile, { changes, skipped, missing, stale }) {
+function report(actor, profile, { changes, skipped, missing, stale }, quiet = false) {
   const t = (key, data) => game.i18n.format(key, data);
-  if (changes.length) ui.notifications.info(t("PF1EP.Report.Applied", { profile: profile.name, count: changes.length }));
+  if (quiet) {
+    // Live edits: the doll itself shows the result.
+  } else if (changes.length) ui.notifications.info(t("PF1EP.Report.Applied", { profile: profile.name, count: changes.length }));
   else if (!missing.length) ui.notifications.info(t("PF1EP.Report.AlreadyEquipped", { profile: profile.name }));
 
   const rings = changes.filter((c) => c.slot === "ring" && c.op === "unequip").map((c) => c.label);
-  if (rings.length) ui.notifications.info(t("PF1EP.Report.RingsRemoved", { items: rings.join(", ") }));
+  if (rings.length && !quiet) ui.notifications.info(t("PF1EP.Report.RingsRemoved", { items: rings.join(", ") }));
 
   if (missing.length) ui.notifications.warn(t("PF1EP.Report.Missing", { profile: profile.name, items: missing.map(missingLabel).join(", ") }));
 
   const twoHanded = skipped.filter((s) => s.reason === "twoHanded").map((s) => s.item.name);
   if (twoHanded.length) ui.notifications.warn(t("PF1EP.Report.TwoHanded", { items: twoHanded.join(", ") }));
+  const disabled = skipped.filter((s) => s.reason === "disabled").map((s) => s.item?.name ?? refLabel(s.ref));
+  if (disabled.length) ui.notifications.warn(t("PF1EP.Report.Disabled", { items: disabled.join(", "), actor: actor.name }));
   const misfit = skipped.filter((s) => s.reason === "fit").map((s) => s.item.name);
   if (misfit.length) ui.notifications.warn(t("PF1EP.Report.NoLongerFits", { items: misfit.join(", ") }));
 

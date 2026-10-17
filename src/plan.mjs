@@ -2,6 +2,7 @@
  * Profile → list of changes. DESIGN.md §7.1–7.2.
  */
 
+import { blockingToggle, disabledSet, isOff } from "./actor-slots.mjs";
 import { findInContainer, resolveRef } from "./match.mjs";
 import {
   RINGS,
@@ -26,7 +27,18 @@ const bucketFor = (key) => (RINGS.includes(key) ? "rings" : key);
  *   `active` is false for a profile that sets nothing it can act on.
  */
 export function buildPlan(actor, profile) {
-  const slots = profile.slots;
+  const skipped = [];
+
+  // Disabled slots act as Ignore; anything they would equip is reported (§3.7).
+  const off = disabledSet(actor);
+  const slots = { ...profile.slots };
+  if (off.size) {
+    for (const key of SLOTS) {
+      if (slots[key].state === "ignore" || !isOff(key, off)) continue;
+      if (slots[key].state === "item") skipped.push({ item: null, ref: slots[key].item, slot: key, reason: "disabled" });
+      slots[key] = { state: "ignore", item: null, held: null };
+    }
+  }
 
   // Weapons an Other entry equips are not main-hand occupants (§7.2).
   const otherIds = new Set();
@@ -45,7 +57,6 @@ export function buildPlan(actor, profile) {
   const claimed = new Set();
   const targets = new Map();
   const missing = [];
-  const skipped = [];
   let emptySlots = 0;
 
   for (const key of SLOTS) {
@@ -82,6 +93,10 @@ export function buildPlan(actor, profile) {
     });
     if (!item) {
       if (o.equipped) missing.push({ ref: o.item, slot: "other", container: findInContainer(actor, o.item) });
+      continue;
+    }
+    if (o.equipped && blockingToggle(item, off)) {
+      skipped.push({ item, ref: o.item, slot: "other", reason: "disabled" });
       continue;
     }
     claimed.add(item.id);

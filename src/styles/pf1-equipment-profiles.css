@@ -34,10 +34,8 @@
   white-space: nowrap;
 }
 
-.pep-controls .pep-empty {
+.pep-controls .pep-spacer {
   flex: 1 1 auto;
-  font-style: italic;
-  opacity: 0.7;
 }
 
 .pep-controls.pending button[data-pep="equip"] i::before {
@@ -49,8 +47,48 @@
 }
 
 /* -------------------------------------------- */
+/*  Slot placeholder glyphs (§6.5)              */
+/* -------------------------------------------- */
+
+.pep-equip-window .pep-glyph,
+.pep-style-config .pep-glyph {
+  filter: hue-rotate(var(--pep-icon-hue, 0deg));
+  opacity: 0.85;
+  pointer-events: none;
+}
+
+.pep-equip-window .pep-glyph-fa,
+.pep-style-config .pep-glyph-fa {
+  color: var(--pep-icon-color, #b3a37f);
+  font-size: 1.45em;
+}
+
+.pep-equip-window .pep-glyph-mask,
+.pep-style-config .pep-glyph-mask {
+  display: block;
+  width: 82%;
+  height: 82%;
+  background-color: var(--pep-icon-color, #b3a37f);
+  -webkit-mask: var(--pep-img) center / contain no-repeat;
+  mask: var(--pep-img) center / contain no-repeat;
+}
+
+.pep-equip-window .pep-glyph-img,
+.pep-style-config .pep-glyph-img {
+  width: 82%;
+  height: 82%;
+  object-fit: contain;
+  border: none;
+}
+
+/* -------------------------------------------- */
 /*  Equip window (§6)                           */
 /* -------------------------------------------- */
+
+.pep-equip-window {
+  --pep-slot: 46px;
+  --pep-gap: 6px;
+}
 
 .pep-equip-window .window-content {
   padding: 8px;
@@ -121,7 +159,7 @@
 
 .pep-equip-window .pep-ew-body {
   display: grid;
-  grid-template-columns: 1fr 230px;
+  grid-template-columns: 1fr 220px;
   gap: 8px;
   min-height: 0;
 }
@@ -130,45 +168,72 @@
 
 .pep-equip-window .pep-doll {
   display: grid;
-  grid-template-columns: 1fr 170px 1fr;
-  gap: 6px;
-  align-items: start;
+  grid-template-columns: var(--pep-slot) 1fr var(--pep-slot);
+  grid-template-areas:
+    "left center right"
+    "hands hands hands";
+  column-gap: 10px;
+  row-gap: 8px;
+  padding: 8px;
+  border-radius: 6px;
+  background: rgba(0, 0, 0, 0.35);
 }
 
 .pep-equip-window .pep-col {
   display: flex;
   flex-direction: column;
-  gap: 4px;
+  gap: var(--pep-gap);
+}
+
+.pep-equip-window .pep-col.left {
+  grid-area: left;
+}
+
+.pep-equip-window .pep-col.right {
+  grid-area: right;
+}
+
+.pep-equip-window .pep-center {
+  grid-area: center;
   min-width: 0;
-}
-
-.pep-equip-window .pep-slot-row {
-  display: flex;
-  align-items: center;
-  gap: 6px;
-  min-width: 0;
-}
-
-.pep-equip-window .pep-col.right .pep-slot-row {
-  flex-direction: row-reverse;
-  text-align: right;
-}
-
-.pep-equip-window .pep-slot {
-  position: relative;
-  flex: 0 0 44px;
-  width: 44px;
-  height: 44px;
   display: flex;
   align-items: center;
   justify-content: center;
-  border: 1px dashed var(--color-border, #999);
-  border-radius: 4px;
-  cursor: pointer;
-  background: rgba(0, 0, 0, 0.15);
 }
 
-.pep-equip-window .pep-slot img {
+.pep-equip-window .pep-portrait {
+  width: 100%;
+  height: calc(7 * var(--pep-slot) + 6 * var(--pep-gap));
+  object-fit: contain;
+  border: none;
+}
+
+.pep-equip-window .pep-hands {
+  grid-area: hands;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  gap: 6px;
+}
+
+/* Slots */
+
+.pep-equip-window .pep-slot {
+  position: relative;
+  flex: 0 0 var(--pep-slot);
+  width: var(--pep-slot);
+  height: var(--pep-slot);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border: 1px solid rgba(180, 160, 120, 0.45);
+  border-radius: 4px;
+  background: rgba(10, 8, 4, 0.75);
+  box-shadow: inset 0 0 6px rgba(0, 0, 0, 0.8);
+  cursor: pointer;
+}
+
+.pep-equip-window .pep-slot .pep-item-img {
   width: 100%;
   height: 100%;
   object-fit: cover;
@@ -176,27 +241,23 @@
   border-radius: 3px;
 }
 
-.pep-equip-window .pep-slot.item {
-  border-style: solid;
+.pep-equip-window .pep-slot.filled {
+  border-color: rgba(220, 190, 120, 0.85);
 }
 
 .pep-equip-window .pep-slot.empty {
-  border-style: solid;
   border-color: #a33;
-  background: rgba(170, 40, 40, 0.25);
 }
 
-.pep-equip-window .pep-slot.ignore .pep-slot-glyph {
-  opacity: 0.35;
-  font-size: 1.2em;
+.pep-equip-window .pep-slot .pep-empty-mark {
+  position: absolute;
+  font-size: 1.6em;
+  color: rgba(200, 50, 50, 0.85);
+  pointer-events: none;
 }
 
-.pep-equip-window .pep-slot.empty .pep-slot-glyph {
-  color: #c44;
-  font-size: 1.3em;
-}
-
-.pep-equip-window .pep-slot.selected {
+.pep-equip-window .pep-slot.selected,
+.pep-equip-window .pep-other.selected {
   outline: 2px solid var(--color-warm-1, #ff6400);
   outline-offset: 1px;
 }
@@ -206,12 +267,13 @@
   box-shadow: 0 0 6px 2px var(--color-warm-1, #ff6400);
 }
 
-.pep-equip-window .pep-slot.locked {
-  opacity: 0.55;
+.pep-equip-window .pep-slot.mirror .pep-item-img {
+  opacity: 0.45;
+  filter: grayscale(0.5);
 }
 
-.pep-equip-window .pep-slot.missing img {
-  opacity: 0.4;
+.pep-equip-window .pep-slot.missing .pep-glyph {
+  opacity: 0.35;
 }
 
 .pep-equip-window .pep-slot .pep-badge {
@@ -223,69 +285,87 @@
   text-shadow: 0 0 2px #000;
 }
 
-.pep-equip-window .pep-caption {
-  flex: 1 1 auto;
-  min-width: 0;
-  overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
-  font-size: 0.85em;
+/* Disabled on this actor (§3.7): hidden, but keeps its place so the doll doesn't reflow. */
+.pep-equip-window .slot-off {
+  visibility: hidden;
 }
 
-.pep-equip-window .pep-caption.ignore {
+.pep-equip-window .pep-item.blocked {
+  opacity: 0.4;
+  cursor: not-allowed;
+}
+
+/* Armor stack: Over Armor sits two-thirds under Armor until it holds something (§6.1). */
+
+.pep-equip-window .pep-armor-stack {
+  position: relative;
+  width: var(--pep-slot);
+  height: var(--pep-slot);
+  flex: 0 0 var(--pep-slot);
+}
+
+.pep-equip-window .pep-armor-stack .pep-slot[data-slot="armor"] {
+  position: absolute;
+  left: 0;
+  top: 0;
+  z-index: 2;
+  /* Opaque, so the tucked Over Armor slot doesn't show through. */
+  background: rgb(12, 10, 6);
+}
+
+.pep-equip-window .pep-armor-stack .pep-slot[data-slot="armorOver"] {
+  position: absolute;
+  top: 0;
+  left: calc(var(--pep-slot) / 3);
+  z-index: 1;
+  transition: left 0.15s ease;
+}
+
+.pep-equip-window .pep-armor-stack.open .pep-slot[data-slot="armorOver"] {
+  left: calc(var(--pep-slot) + var(--pep-gap));
+  z-index: 3;
+}
+
+/* Hand link */
+
+.pep-equip-window .pep-link {
+  flex: 0 0 22px;
+  text-align: center;
+  font-size: 1.1em;
   opacity: 0.5;
-  font-style: italic;
+  cursor: pointer;
 }
 
-.pep-equip-window .pep-caption.empty {
-  color: #c44;
+.pep-equip-window .pep-link.on {
+  opacity: 1;
+  color: var(--color-warm-1, #ff6400);
 }
 
-.pep-equip-window .pep-center {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  gap: 8px;
-}
-
-.pep-equip-window .pep-portrait {
-  width: 170px;
-  height: 230px;
-  object-fit: cover;
-  object-position: top;
-  border: 1px solid var(--color-border, #999);
-  border-radius: 6px;
-}
-
-.pep-equip-window .pep-hands {
-  display: flex;
-  flex-direction: column;
-  gap: 4px;
-  width: 100%;
-}
-
-.pep-equip-window .pep-grip {
-  flex: 0 0 auto;
-  width: auto;
-  height: 22px;
-  line-height: 20px;
-  padding: 0 6px;
-  margin: 0;
-  font-size: 0.8em;
+.pep-equip-window .pep-link.fixed {
+  cursor: default;
 }
 
 /* Item pane */
 
+/* `contain: size` keeps the list out of the row's height, so the doll alone sizes the window and
+   filtering never resizes it; the grid then stretches the pane to the doll's height. */
 .pep-equip-window .pep-items {
   display: flex;
   flex-direction: column;
   gap: 4px;
   min-height: 0;
+  contain: size;
 }
 
 .pep-equip-window .pep-item-list {
-  max-height: 430px;
+  flex: 1 1 0;
+  min-height: 0;
   overflow-y: auto;
+}
+
+.pep-equip-window .pep-group[hidden],
+.pep-equip-window .pep-item[hidden] {
+  display: none;
 }
 
 .pep-equip-window .pep-group h4 {
@@ -303,10 +383,6 @@
   padding: 2px;
   border-radius: 3px;
   cursor: pointer;
-}
-
-.pep-equip-window .pep-item[hidden] {
-  display: none;
 }
 
 .pep-equip-window .pep-item:hover {
@@ -337,42 +413,50 @@
   font-size: 0.8em;
 }
 
-/* Other */
+/* Bottom row: Other (clothing included) */
+
+.pep-equip-window .pep-bottom {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
 
 .pep-equip-window .pep-other {
-  border: 1px dashed var(--color-border, #999);
-  border-radius: 4px;
-  padding: 4px 6px;
-}
-
-.pep-equip-window .pep-other.selected {
-  border-color: var(--color-warm-1, #ff6400);
-}
-
-.pep-equip-window .pep-other h4 {
-  margin: 0 0 4px;
-  font-size: 0.85em;
-  text-transform: uppercase;
-  cursor: pointer;
-}
-
-.pep-equip-window .pep-other-grid {
+  flex: 1 1 auto;
   display: flex;
   flex-wrap: wrap;
-  gap: 6px;
-  min-height: 44px;
   align-items: center;
+  gap: 6px;
+  min-height: calc(var(--pep-slot) + 8px);
+  padding: 3px 6px;
+  border: 1px dashed var(--color-border, #999);
+  border-radius: 4px;
+}
+
+.pep-equip-window .pep-other.pep-bar-clothing {
+  flex: 1 1 0;
+}
+
+.pep-equip-window .pep-other.pep-bar-other {
+  flex: 2 1 0;
+}
+
+.pep-equip-window .pep-other-label {
+  flex: 0 0 auto;
+  opacity: 0.6;
+  cursor: pointer;
 }
 
 .pep-equip-window .pep-other-entry {
   position: relative;
-  width: 44px;
-  height: 44px;
+  width: var(--pep-slot);
+  height: var(--pep-slot);
   display: flex;
   align-items: center;
   justify-content: center;
-  border: 1px solid var(--color-border, #999);
+  border: 1px solid rgba(220, 190, 120, 0.85);
   border-radius: 4px;
+  background: rgba(10, 8, 4, 0.75);
 }
 
 .pep-equip-window .pep-other-entry img {
@@ -408,10 +492,6 @@
   top: -4px;
 }
 
-.pep-equip-window .pep-other .hint {
-  margin: 0;
-}
-
 /* Warnings and footer */
 
 .pep-equip-window .pep-warnings {
@@ -424,11 +504,103 @@
 
 .pep-equip-window .pep-ew-footer {
   display: flex;
+  align-items: center;
   gap: 6px;
 }
 
 .pep-equip-window .pep-ew-footer button {
   flex: 1 1 0;
+  white-space: nowrap;
+}
+
+.pep-equip-window .pep-ew-footer .pep-profile-select {
+  flex: 2 1 0;
+  min-width: 0;
+}
+
+.pep-equip-window .pep-ew.pending .pep-doll,
+.pep-equip-window .pep-ew.pending .pep-items,
+.pep-equip-window .pep-ew.pending .pep-bottom {
+  pointer-events: none;
+  opacity: 0.7;
+}
+
+/* -------------------------------------------- */
+/*  Slot style config (§6.5)                    */
+/* -------------------------------------------- */
+
+.pep-style-config .pep-sc {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.pep-style-config .pep-sc-body {
+  display: grid;
+  grid-template-columns: 46px 1fr 46px;
+  gap: 12px;
+}
+
+.pep-style-config .pep-sc-col {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.pep-style-config .pep-sc-center {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  gap: 6px;
+}
+
+.pep-style-config .pep-sc-bottom {
+  display: flex;
+  justify-content: center;
+  gap: 6px;
+}
+
+.pep-style-config .pep-style-slot {
+  width: 46px;
+  height: 46px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border: 1px solid rgba(180, 160, 120, 0.45);
+  border-radius: 4px;
+  background: rgba(10, 8, 4, 0.75);
+  cursor: pointer;
+}
+
+.pep-style-config .pep-style-slot.custom {
+  border-color: var(--color-warm-1, #ff6400);
+}
+
+.pep-style-config .pep-sc-footer {
+  display: flex;
+  gap: 6px;
+}
+
+.pep-style-config .pep-sc-footer button {
+  flex: 1 1 0;
+}
+
+/* -------------------------------------------- */
+/*  Actor Settings tab: disabled slots (§3.7)   */
+/* -------------------------------------------- */
+
+.pep-actor-slots .pep-slot-toggles {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 2px 8px;
+}
+
+/* -------------------------------------------- */
+/*  Item sheet section (§3.6)                   */
+/* -------------------------------------------- */
+
+.pep-sheet .pep-sheet-body .form-group {
+  margin: 2px 0;
 }
 
 /* -------------------------------------------- */

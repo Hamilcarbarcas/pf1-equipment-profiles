@@ -38,13 +38,25 @@ function normalizeSlot(slot) {
   return { ...IGNORE };
 }
 
+/** Stored profile shape. 2: clothing moved from a slot to Other (§3.2). */
+export const PROFILE_VERSION = 2;
+
 export function normalize(profile) {
   const slots = blankSlots();
   for (const key of SLOTS) slots[key] = normalizeSlot(profile?.slots?.[key]);
   const other = (profile?.other ?? [])
     .filter((o) => o?.item?.name)
     .map((o) => ({ item: { ...o.item }, equipped: o.equipped !== false }));
+
+  // v1 → v2. Gated on the version because merge-writes leave the stale `slots.clothing` key behind.
+  const clothing = profile?.slots?.clothing;
+  if ((profile?.version ?? 1) < 2 && clothing?.state === "item" && clothing.item?.name) {
+    const listed = other.some((o) => o.item.id === clothing.item.id);
+    if (!listed) other.push({ item: { ...clothing.item }, equipped: true });
+  }
+
   return {
+    version: PROFILE_VERSION,
     id: profile?.id || foundry.utils.randomID(16),
     name: String(profile?.name ?? "").trim() || game.i18n.localize("PF1EP.DefaultName"),
     icon: profile?.icon || DEFAULT_ICON,

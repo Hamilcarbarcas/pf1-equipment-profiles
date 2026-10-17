@@ -75,6 +75,10 @@ export const api = {
     return EquipWindow.open(need(actor), id);
   },
 
+  openEquipment(actor) {
+    return EquipWindow.openLive(need(actor));
+  },
+
   registerGate,
   unregisterGate,
 };

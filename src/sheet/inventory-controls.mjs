@@ -40,7 +40,6 @@ function buildRow(actor) {
   if (!profiles.some((p) => p.id === selectedId)) {
     selectedId = profiles.find((p) => current.has(p.id))?.id ?? profiles[0]?.id ?? null;
   }
-  const selected = profiles.find((p) => p.id === selectedId) ?? null;
 
   const row = document.createElement("div");
   row.className = `${CSS}controls`;
@@ -49,6 +48,7 @@ function buildRow(actor) {
   const button = (action, icon, label) =>
     `<button type="button" data-pep="${action}"><i class="fa-solid ${icon}" inert></i> ${esc(t(label))}</button>`;
 
+  const parts = [button("live", "fa-user-shield", "PF1EP.Controls.Equipment")];
   if (profiles.length) {
     const options = profiles
       .map((p) => {
@@ -56,25 +56,22 @@ function buildRow(actor) {
         return `<option value="${p.id}"${p.id === selectedId ? " selected" : ""}>${mark}${esc(p.name)}</option>`;
       })
       .join("");
-    row.innerHTML = [
-      `<i class="${esc(selected?.icon ?? "")} ${CSS}profile-icon" inert></i>`,
+    parts.push(
       `<select class="${CSS}select" data-tooltip="PF1EP.Controls.Select">${options}</select>`,
       button("equip", "fa-shirt", "PF1EP.Controls.Equip"),
-      button("edit", "fa-pen-to-square", "PF1EP.Controls.Edit"),
-      button("new", "fa-plus", "PF1EP.Controls.New"),
-    ].join("");
+      button("edit", "fa-pen-to-square", "PF1EP.Controls.Edit")
+    );
   } else {
-    row.innerHTML = `<span class="${CSS}empty">${esc(t("PF1EP.Controls.None"))}</span>${button("new", "fa-plus", "PF1EP.Controls.New")}`;
+    parts.push(`<span class="${CSS}spacer"></span>`);
   }
+  parts.push(button("new", "fa-plus", "PF1EP.Controls.New"));
+  row.innerHTML = parts.join("");
 
   const select = row.querySelector("select");
   // Kept out of the sheet's submit-on-change.
   select?.addEventListener("change", (event) => {
     event.stopPropagation();
     setSelected(actor, select.value);
-    const profile = profiles.find((p) => p.id === select.value);
-    const icon = row.querySelector(`.${CSS}profile-icon`);
-    if (icon && profile) icon.className = `${profile.icon} ${CSS}profile-icon`;
   });
 
   row.addEventListener("click", (event) => {
@@ -85,6 +82,9 @@ function buildRow(actor) {
     const id = select?.value ?? null;
     const profile = profiles.find((p) => p.id === id) ?? null;
     switch (btn.dataset.pep) {
+      case "live":
+        EquipWindow.openLive(actor);
+        break;
       case "equip":
         if (profile) applyProfile(actor, profile, { source: "sheet" });
         break;
@@ -99,7 +99,9 @@ function buildRow(actor) {
 
   if (isPending(actor)) {
     row.classList.add("pending");
-    for (const el of row.querySelectorAll("button, select")) el.disabled = true;
+    for (const el of row.querySelectorAll("button, select")) {
+      if (el.dataset.pep !== "live") el.disabled = true;
+    }
   }
   return row;
 }

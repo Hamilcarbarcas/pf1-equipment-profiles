@@ -1,0 +1,11 @@
+{
+  "dest": "src/common",
+  "vars": {
+    "PREFIX": "pep-"
+  },
+  "files": [
+    "sheet/collapse.mjs",
+    "sheet/field-bind.mjs",
+    "sheet/kit.css"
+  ]
+}

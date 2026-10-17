@@ -29,6 +29,7 @@
     "src/pf1-equipment-profiles.mjs"
   ],
   "styles": [
+    "src/common/sheet/kit.css",
     "src/styles/pf1-equipment-profiles.css"
   ],
   "languages": [

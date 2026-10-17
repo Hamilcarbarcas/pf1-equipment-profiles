@@ -5,12 +5,13 @@
 import { MODULE_ID } from "./const.mjs";
 
 export const HANDS = ["mainHand", "offHand"];
-export const LEFT = ["head", "headband", "eyes", "neck", "shoulders", "chest", "body", "armor", "armorOver"];
-export const RIGHT = ["hands", "wrists", "belt", "feet", "ring1", "ring2", "clothing"];
+/** Doll columns (§3.1). Over Armor is drawn stacked under Armor, not as its own row. */
+export const LEFT = ["head", "shoulders", "armor", "body", "chest", "belt", "feet"];
+export const RIGHT = ["headband", "eyes", "neck", "wrists", "hands", "ring1", "ring2"];
 export const RINGS = ["ring1", "ring2"];
 
 /** Resolution order: hands first, then layout order (§4.1). */
-export const SLOTS = [...HANDS, ...LEFT, ...RIGHT];
+export const SLOTS = [...HANDS, "head", "shoulders", "armor", "armorOver", "body", "chest", "belt", "feet", ...RIGHT];
 
 const WONDROUS = new Set(["head", "headband", "eyes", "shoulders", "neck", "chest", "body", "belt", "wrists", "hands", "feet"]);
 
@@ -32,7 +33,6 @@ export const SLOT_ICONS = Object.freeze({
   feet: "fa-boot",
   ring1: "fa-ring",
   ring2: "fa-ring",
-  clothing: "fa-shirt",
 });
 
 export function slotLabel(key) {
@@ -48,6 +48,8 @@ export function slotLabel(key) {
       return game.i18n.localize("PF1EP.Slot.ArmorOver");
     case "clothing":
       return game.i18n.localize(slots.clothing.clothing);
+    case "other":
+      return game.i18n.localize("PF1EP.Window.Other");
     case "ring1":
     case "ring2":
       return game.i18n.localize(slots.wondrous.ring);
@@ -82,7 +84,7 @@ export function regionOf(item) {
     case "shield":
       return "hand";
     case "clothing":
-      return "clothing";
+      return "other";
     default: {
       const slot = item.system.slot;
       if (slot === "ring") return "ring";
@@ -97,7 +99,7 @@ export function kindOf(item) {
   if (item.type === "equipment") {
     if (item.subType === "shield") return "shield";
     if (item.subType === "armor") return "armor";
-    if (regionOf(item) !== "other") return "worn";
+    if (item.subType === "clothing" || regionOf(item) !== "other") return "worn";
   }
   return "other";
 }
@@ -105,12 +107,19 @@ export function kindOf(item) {
 /** PF1 base types worn over another suit (§3.6). */
 export const LAYER_BASE_TYPES = Object.freeze({ coat: "Armored Coat", kilt: "Armored Kilt" });
 
-/** Armor worn over another suit: an armored coat or kilt by base type, or flagged by hand (§3.6). */
-export function isLayer(item) {
-  if (item?.type !== "equipment" || item.subType !== "armor") return false;
-  if (item.flags?.[MODULE_ID]?.layer === true) return true;
-  const base = item.system.baseTypes ?? [];
+export const isArmor = (item) => item?.type === "equipment" && item.subType === "armor";
+
+/** Default for the "wearable with other armor" toggle: on for PF1's coat and kilt base types. */
+export function layerDefault(item) {
+  const base = item?.system?.baseTypes ?? [];
   return Object.values(LAYER_BASE_TYPES).some((t) => base.includes(t));
+}
+
+/** Armor worn over another suit: the item's toggle when set, else `layerDefault` (§3.6). */
+export function isLayer(item) {
+  if (!isArmor(item)) return false;
+  const flag = item.flags?.[MODULE_ID]?.layer;
+  return typeof flag === "boolean" ? flag : layerDefault(item);
 }
 
 /** "coat" | "kilt" | null, by base type. */
@@ -143,13 +152,25 @@ export function fits(item, slot) {
     case "armorOver":
       return isLayer(item);
     case "other":
-      return fitsOther(item);
+    case "clothing":
+      return fitsBar(item, slot);
     default:
       return region === slot;
   }
 }
 
-/** Other holds extra weapons and anything without a slot (§3.2). */
+export const isClothing = (item) => item?.type === "equipment" && item.subType === "clothing";
+
+/** The two bars drawn over the one Other list (§6.1): clothing, and everything else. */
+export const BARS = ["clothing", "other"];
+
+/** Which bar an Other-list item shows in. */
+export const barOf = (item) => (isClothing(item) ? "clothing" : "other");
+
+/** Item fits that bar: Other-list material, and the bar matching its kind. */
+export const fitsBar = (item, bar) => fitsOther(item) && barOf(item) === bar;
+
+/** Other holds extra weapons, clothing, and anything without a slot (§3.2). */
 export function fitsOther(item) {
   const region = regionOf(item);
   return region === "other" || item.type === "weapon";
@@ -182,7 +203,7 @@ export function liveHeld(item) {
  */
 export function occupancy(actor, otherIds = new Set()) {
   const occ = { mainHand: [], offHand: [], rings: [], other: [] };
-  for (const key of [...LEFT, ...RIGHT]) if (!RINGS.includes(key)) occ[key] = [];
+  for (const key of SLOTS) if (!HANDS.includes(key) && !RINGS.includes(key)) occ[key] = [];
 
   const items = [...actor.items].sort((a, b) => (a.sort ?? 0) - (b.sort ?? 0));
   const suitWorn = items.some((i) => i.system.equipped === true && regionOf(i) === "armor" && !isLayer(i));
