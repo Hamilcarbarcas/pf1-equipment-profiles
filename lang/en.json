@@ -1,0 +1,78 @@
+{
+  "PF1EP": {
+    "DefaultName": "New Profile",
+    "Settings": {
+      "Announce": {
+        "Name": "Announce in Chat",
+        "Hint": "Post a chat card listing what changed whenever a profile is equipped."
+      }
+    },
+    "Slot": {
+      "MainHand": "Main Hand",
+      "OffHand": "Off Hand",
+      "ArmorOver": "Over Armor"
+    },
+    "Grip": {
+      "1h": "1H",
+      "2h": "2H"
+    },
+    "Controls": {
+      "Select": "Equipment profile (✓ = currently equipped)",
+      "Equip": "Equip",
+      "Edit": "Edit",
+      "New": "New",
+      "None": "No equipment profiles"
+    },
+    "Window": {
+      "Title": "Equipment Profile: {actor}",
+      "NamePlaceholder": "Profile name",
+      "Icon": "Icon",
+      "Filter": "Filter items",
+      "Empty": "Empty",
+      "Missing": "{item} (not found)",
+      "InContainer": "{item} (in {container})",
+      "MarkEmpty": "Mark Empty",
+      "Ignore": "Ignore",
+      "GripHint": "One or two hands",
+      "Other": "Other Equipped",
+      "OtherHint": "Drop extra weapons or slotless items here.",
+      "OtherEquip": "Equip (click to unequip instead)",
+      "OtherUnequip": "Unequip (click to equip instead)",
+      "Remove": "Remove",
+      "FromCurrent": "From Current",
+      "Clear": "Clear",
+      "Delete": "Delete",
+      "Save": "Save",
+      "DeleteTitle": "Delete Equipment Profile",
+      "DeleteConfirm": "Delete the profile <strong>{profile}</strong>?"
+    },
+    "Report": {
+      "Applied": "{profile}: {count} change(s).",
+      "AlreadyEquipped": "{profile} is already equipped.",
+      "RingsRemoved": "Rings removed to make room: {items}.",
+      "Missing": "{profile}: not found: {items}.",
+      "InContainer": "{item} (in {container})",
+      "TwoHanded": "Skipped for the two-handed grip: {items}.",
+      "NoLongerFits": "Skipped, no longer fits its slot: {items}.",
+      "Stale": "Skipped, changed while waiting for approval: {items}."
+    },
+    "Card": {
+      "Equipped": "Equipped",
+      "Unequipped": "Unequipped",
+      "Regripped": "Grip"
+    },
+    "Warn": {
+      "NotOwner": "You don't own this actor.",
+      "Pending": "An equipment change for {actor} is already waiting for approval.",
+      "GateFailed": "Equip approval \"{gate}\" failed; nothing was changed. See the console.",
+      "HeldHidden": "{item}: these actions set their own grip, so the profile's grip won't reach them: {actions}.",
+      "NotThisActor": "Only this actor's own items can be assigned.",
+      "DoesNotFit": "{item} doesn't fit {slot}.",
+      "OffHandLocked": "The main hand is two-handed; only a buckler can go in the off hand.",
+      "LayerOverHeavy": {
+        "coat": "{item} has no effect over heavy armor.",
+        "kilt": "{item} adds no armor bonus over heavy armor."
+      }
+    }
+  }
+}

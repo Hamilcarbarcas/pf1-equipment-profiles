@@ -1,0 +1,208 @@
+/**
+ * Slot vocabulary, item → slot mapping, and live occupancy. DESIGN.md §3.
+ */
+
+import { MODULE_ID } from "./const.mjs";
+
+export const HANDS = ["mainHand", "offHand"];
+export const LEFT = ["head", "headband", "eyes", "neck", "shoulders", "chest", "body", "armor", "armorOver"];
+export const RIGHT = ["hands", "wrists", "belt", "feet", "ring1", "ring2", "clothing"];
+export const RINGS = ["ring1", "ring2"];
+
+/** Resolution order: hands first, then layout order (§4.1). */
+export const SLOTS = [...HANDS, ...LEFT, ...RIGHT];
+
+const WONDROUS = new Set(["head", "headband", "eyes", "shoulders", "neck", "chest", "body", "belt", "wrists", "hands", "feet"]);
+
+export const SLOT_ICONS = Object.freeze({
+  mainHand: "fa-sword",
+  offHand: "fa-shield-halved",
+  head: "fa-helmet-battle",
+  headband: "fa-crown",
+  eyes: "fa-glasses",
+  neck: "fa-gem",
+  shoulders: "fa-hood-cloak",
+  chest: "fa-vest",
+  body: "fa-shirt-long-sleeve",
+  armor: "fa-user-shield",
+  armorOver: "fa-vest-patches",
+  hands: "fa-mitten",
+  wrists: "fa-hand-back-fist",
+  belt: "fa-grip-lines",
+  feet: "fa-boot",
+  ring1: "fa-ring",
+  ring2: "fa-ring",
+  clothing: "fa-shirt",
+});
+
+export function slotLabel(key) {
+  const slots = pf1.config.equipmentSlots;
+  switch (key) {
+    case "mainHand":
+      return game.i18n.localize("PF1EP.Slot.MainHand");
+    case "offHand":
+      return game.i18n.localize("PF1EP.Slot.OffHand");
+    case "armor":
+      return game.i18n.localize(slots.armor.armor);
+    case "armorOver":
+      return game.i18n.localize("PF1EP.Slot.ArmorOver");
+    case "clothing":
+      return game.i18n.localize(slots.clothing.clothing);
+    case "ring1":
+    case "ring2":
+      return game.i18n.localize(slots.wondrous.ring);
+    default:
+      return game.i18n.localize(slots.wondrous[key] ?? key);
+  }
+}
+
+/** Item types the inventory tab offers an equip toggle for. */
+export function isEquippable(item) {
+  if (!item?.isPhysical) return false;
+  switch (item.type) {
+    case "weapon":
+    case "equipment":
+    case "container":
+      return true;
+    case "loot":
+      return !pf1.config.unequippableLoot.includes(item.subType);
+    default:
+      return false;
+  }
+}
+
+/** "hand" | "ring" | "other" | a worn slot key, or null when not equippable. */
+export function regionOf(item) {
+  if (!isEquippable(item)) return null;
+  if (item.type === "weapon") return "hand";
+  if (item.type !== "equipment") return "other";
+  switch (item.subType) {
+    case "armor":
+      return "armor";
+    case "shield":
+      return "hand";
+    case "clothing":
+      return "clothing";
+    default: {
+      const slot = item.system.slot;
+      if (slot === "ring") return "ring";
+      return WONDROUS.has(slot) ? slot : "other";
+    }
+  }
+}
+
+/** Change `kind` (§7.2). */
+export function kindOf(item) {
+  if (item.type === "weapon") return "weapon";
+  if (item.type === "equipment") {
+    if (item.subType === "shield") return "shield";
+    if (item.subType === "armor") return "armor";
+    if (regionOf(item) !== "other") return "worn";
+  }
+  return "other";
+}
+
+/** PF1 base types worn over another suit (§3.6). */
+export const LAYER_BASE_TYPES = Object.freeze({ coat: "Armored Coat", kilt: "Armored Kilt" });
+
+/** Armor worn over another suit: an armored coat or kilt by base type, or flagged by hand (§3.6). */
+export function isLayer(item) {
+  if (item?.type !== "equipment" || item.subType !== "armor") return false;
+  if (item.flags?.[MODULE_ID]?.layer === true) return true;
+  const base = item.system.baseTypes ?? [];
+  return Object.values(LAYER_BASE_TYPES).some((t) => base.includes(t));
+}
+
+/** "coat" | "kilt" | null, by base type. */
+export function layerKind(item) {
+  const base = item?.system?.baseTypes ?? [];
+  if (base.includes(LAYER_BASE_TYPES.coat)) return "coat";
+  if (base.includes(LAYER_BASE_TYPES.kilt)) return "kilt";
+  return null;
+}
+
+export const isHeavyArmor = (item) =>
+  item?.type === "equipment" && item.subType === "armor" && item.system.equipmentSubtype === "heavyArmor";
+
+export const isShield = (item) => item?.type === "equipment" && item.subType === "shield";
+
+/** PF1's misc shield subtype, commented in its proficiency map as the buckler (§2). */
+export const isBuckler = (item) => isShield(item) && item.system.equipmentSubtype === "other";
+
+export function fits(item, slot) {
+  const region = regionOf(item);
+  if (!region) return false;
+  switch (slot) {
+    case "mainHand":
+      return item.type === "weapon";
+    case "offHand":
+      return region === "hand";
+    case "ring1":
+    case "ring2":
+      return region === "ring";
+    case "armorOver":
+      return isLayer(item);
+    case "other":
+      return fitsOther(item);
+    default:
+      return region === slot;
+  }
+}
+
+/** Other holds extra weapons and anything without a slot (§3.2). */
+export function fitsOther(item) {
+  const region = regionOf(item);
+  return region === "other" || item.type === "weapon";
+}
+
+/** Hold the main hand defaults to, and whether it can be toggled (§3.3). */
+export function mainHandGrip(item) {
+  switch (item.system.weaponSubtype) {
+    case "light":
+      return { held: "1h", fixed: true };
+    case "2h":
+      return { held: "2h", fixed: true };
+    case "ranged":
+      return { held: "2h", fixed: false };
+    default:
+      return { held: "1h", fixed: false };
+  }
+}
+
+/** Live item `held`, normalized; legacy "normal" and blank read as 1h. */
+export function liveHeld(item) {
+  const held = item.system.held;
+  return held === "2h" || held === "oh" ? held : "1h";
+}
+
+/**
+ * Equipped items per slot, from live state. Main hand is every equipped weapon not held
+ * off-hand and not claimed by `otherIds` (§7.2); off hand is off-hand weapons plus shields.
+ * A layer is Over Armor only while a non-layer suit is worn; alone, it is the Armor (§3.6).
+ */
+export function occupancy(actor, otherIds = new Set()) {
+  const occ = { mainHand: [], offHand: [], rings: [], other: [] };
+  for (const key of [...LEFT, ...RIGHT]) if (!RINGS.includes(key)) occ[key] = [];
+
+  const items = [...actor.items].sort((a, b) => (a.sort ?? 0) - (b.sort ?? 0));
+  const suitWorn = items.some((i) => i.system.equipped === true && regionOf(i) === "armor" && !isLayer(i));
+  for (const item of items) {
+    if (item.system.equipped !== true) continue;
+    const region = regionOf(item);
+    if (!region) continue;
+    if (region === "hand") {
+      if (isShield(item) || liveHeld(item) === "oh") occ.offHand.push(item);
+      else if (otherIds.has(item.id)) occ.other.push(item);
+      else occ.mainHand.push(item);
+    } else if (region === "ring") occ.rings.push(item);
+    else if (region === "armor" && suitWorn && isLayer(item)) occ.armorOver.push(item);
+    else occ[region].push(item);
+  }
+  return occ;
+}
+
+/** Which occupancy bucket an equipped item sits in, or null. */
+export function bucketOf(occ, item) {
+  for (const [key, list] of Object.entries(occ)) if (list.includes(item)) return key;
+  return null;
+}

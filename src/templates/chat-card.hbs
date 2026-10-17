@@ -1,0 +1,12 @@
+<div class="{{css}}card">
+  <h3 class="{{css}}card-title"><i class="{{profile.icon}}" inert></i> {{profile.name}}</h3>
+  {{#if equipped.length}}
+  <p><strong>{{localize "PF1EP.Card.Equipped"}}:</strong> {{#each equipped}}{{this}}{{#unless @last}}, {{/unless}}{{/each}}</p>
+  {{/if}}
+  {{#if unequipped.length}}
+  <p><strong>{{localize "PF1EP.Card.Unequipped"}}:</strong> {{#each unequipped}}{{this}}{{#unless @last}}, {{/unless}}{{/each}}</p>
+  {{/if}}
+  {{#if regripped.length}}
+  <p><strong>{{localize "PF1EP.Card.Regripped"}}:</strong> {{#each regripped}}{{name}} ({{held}}){{#unless @last}}, {{/unless}}{{/each}}</p>
+  {{/if}}
+</div>

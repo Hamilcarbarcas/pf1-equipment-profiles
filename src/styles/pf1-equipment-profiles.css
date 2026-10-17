@@ -1,0 +1,444 @@
+/* pf1-equipment-profiles: every selector is scoped under a pep- root (unlayered module CSS
+   outranks core's layers, so a bare selector would restyle all of Foundry). */
+
+/* -------------------------------------------- */
+/*  Inventory tab row (§9)                      */
+/* -------------------------------------------- */
+
+.pep-controls {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  padding: 4px 0 2px;
+  flex: 0 0 auto;
+}
+
+.pep-controls .pep-profile-icon {
+  flex: 0 0 22px;
+  text-align: center;
+  font-size: 1.1em;
+}
+
+.pep-controls .pep-select {
+  flex: 1 1 auto;
+  min-width: 0;
+  height: 26px;
+}
+
+.pep-controls button {
+  flex: 0 0 auto;
+  width: auto;
+  height: 26px;
+  line-height: 24px;
+  padding: 0 8px;
+  white-space: nowrap;
+}
+
+.pep-controls .pep-empty {
+  flex: 1 1 auto;
+  font-style: italic;
+  opacity: 0.7;
+}
+
+.pep-controls.pending button[data-pep="equip"] i::before {
+  content: "\f110"; /* spinner */
+}
+
+.pep-controls.pending button[data-pep="equip"] i {
+  animation: fa-spin 1s linear infinite;
+}
+
+/* -------------------------------------------- */
+/*  Equip window (§6)                           */
+/* -------------------------------------------- */
+
+.pep-equip-window .window-content {
+  padding: 8px;
+}
+
+.pep-equip-window .pep-ew {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.pep-equip-window .pep-ew-header {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.pep-equip-window .pep-ew-header input[name="name"] {
+  flex: 1 1 auto;
+  font-size: 1.1em;
+}
+
+.pep-equip-window .pep-icon-picker {
+  position: relative;
+}
+
+.pep-equip-window .pep-icon-picker > summary {
+  list-style: none;
+  cursor: pointer;
+  width: 32px;
+  height: 32px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 1.3em;
+  border: 1px solid var(--color-border, #999);
+  border-radius: 4px;
+}
+
+.pep-equip-window .pep-icon-picker > summary::-webkit-details-marker {
+  display: none;
+}
+
+.pep-equip-window .pep-icon-grid {
+  position: absolute;
+  z-index: 10;
+  top: 36px;
+  left: 0;
+  display: grid;
+  grid-template-columns: repeat(8, 30px);
+  gap: 2px;
+  padding: 4px;
+  background: var(--color-cool-5, #222);
+  border: 1px solid var(--color-border, #999);
+  border-radius: 4px;
+}
+
+.pep-equip-window .pep-icon-grid button {
+  width: 30px;
+  height: 30px;
+  padding: 0;
+  margin: 0;
+}
+
+.pep-equip-window .pep-icon-grid button.active {
+  outline: 2px solid var(--color-warm-1, #ff6400);
+}
+
+.pep-equip-window .pep-ew-body {
+  display: grid;
+  grid-template-columns: 1fr 230px;
+  gap: 8px;
+  min-height: 0;
+}
+
+/* Doll */
+
+.pep-equip-window .pep-doll {
+  display: grid;
+  grid-template-columns: 1fr 170px 1fr;
+  gap: 6px;
+  align-items: start;
+}
+
+.pep-equip-window .pep-col {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  min-width: 0;
+}
+
+.pep-equip-window .pep-slot-row {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  min-width: 0;
+}
+
+.pep-equip-window .pep-col.right .pep-slot-row {
+  flex-direction: row-reverse;
+  text-align: right;
+}
+
+.pep-equip-window .pep-slot {
+  position: relative;
+  flex: 0 0 44px;
+  width: 44px;
+  height: 44px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border: 1px dashed var(--color-border, #999);
+  border-radius: 4px;
+  cursor: pointer;
+  background: rgba(0, 0, 0, 0.15);
+}
+
+.pep-equip-window .pep-slot img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  border: none;
+  border-radius: 3px;
+}
+
+.pep-equip-window .pep-slot.item {
+  border-style: solid;
+}
+
+.pep-equip-window .pep-slot.empty {
+  border-style: solid;
+  border-color: #a33;
+  background: rgba(170, 40, 40, 0.25);
+}
+
+.pep-equip-window .pep-slot.ignore .pep-slot-glyph {
+  opacity: 0.35;
+  font-size: 1.2em;
+}
+
+.pep-equip-window .pep-slot.empty .pep-slot-glyph {
+  color: #c44;
+  font-size: 1.3em;
+}
+
+.pep-equip-window .pep-slot.selected {
+  outline: 2px solid var(--color-warm-1, #ff6400);
+  outline-offset: 1px;
+}
+
+.pep-equip-window .pep-slot.drag-over,
+.pep-equip-window .pep-other.drag-over {
+  box-shadow: 0 0 6px 2px var(--color-warm-1, #ff6400);
+}
+
+.pep-equip-window .pep-slot.locked {
+  opacity: 0.55;
+}
+
+.pep-equip-window .pep-slot.missing img {
+  opacity: 0.4;
+}
+
+.pep-equip-window .pep-slot .pep-badge {
+  position: absolute;
+  right: 1px;
+  bottom: 1px;
+  font-size: 0.8em;
+  color: #e9a23b;
+  text-shadow: 0 0 2px #000;
+}
+
+.pep-equip-window .pep-caption {
+  flex: 1 1 auto;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  font-size: 0.85em;
+}
+
+.pep-equip-window .pep-caption.ignore {
+  opacity: 0.5;
+  font-style: italic;
+}
+
+.pep-equip-window .pep-caption.empty {
+  color: #c44;
+}
+
+.pep-equip-window .pep-center {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 8px;
+}
+
+.pep-equip-window .pep-portrait {
+  width: 170px;
+  height: 230px;
+  object-fit: cover;
+  object-position: top;
+  border: 1px solid var(--color-border, #999);
+  border-radius: 6px;
+}
+
+.pep-equip-window .pep-hands {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  width: 100%;
+}
+
+.pep-equip-window .pep-grip {
+  flex: 0 0 auto;
+  width: auto;
+  height: 22px;
+  line-height: 20px;
+  padding: 0 6px;
+  margin: 0;
+  font-size: 0.8em;
+}
+
+/* Item pane */
+
+.pep-equip-window .pep-items {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  min-height: 0;
+}
+
+.pep-equip-window .pep-item-list {
+  max-height: 430px;
+  overflow-y: auto;
+}
+
+.pep-equip-window .pep-group h4 {
+  margin: 6px 0 2px;
+  font-size: 0.85em;
+  text-transform: uppercase;
+  opacity: 0.75;
+  border-bottom: 1px solid var(--color-border, #999);
+}
+
+.pep-equip-window .pep-item {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 2px;
+  border-radius: 3px;
+  cursor: pointer;
+}
+
+.pep-equip-window .pep-item[hidden] {
+  display: none;
+}
+
+.pep-equip-window .pep-item:hover {
+  background: rgba(255, 255, 255, 0.08);
+}
+
+.pep-equip-window .pep-item.assigned {
+  opacity: 0.45;
+}
+
+.pep-equip-window .pep-item img {
+  flex: 0 0 26px;
+  width: 26px;
+  height: 26px;
+  border: none;
+}
+
+.pep-equip-window .pep-item-name {
+  flex: 1 1 auto;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.pep-equip-window .pep-equipped {
+  opacity: 0.7;
+  font-size: 0.8em;
+}
+
+/* Other */
+
+.pep-equip-window .pep-other {
+  border: 1px dashed var(--color-border, #999);
+  border-radius: 4px;
+  padding: 4px 6px;
+}
+
+.pep-equip-window .pep-other.selected {
+  border-color: var(--color-warm-1, #ff6400);
+}
+
+.pep-equip-window .pep-other h4 {
+  margin: 0 0 4px;
+  font-size: 0.85em;
+  text-transform: uppercase;
+  cursor: pointer;
+}
+
+.pep-equip-window .pep-other-grid {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  min-height: 44px;
+  align-items: center;
+}
+
+.pep-equip-window .pep-other-entry {
+  position: relative;
+  width: 44px;
+  height: 44px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border: 1px solid var(--color-border, #999);
+  border-radius: 4px;
+}
+
+.pep-equip-window .pep-other-entry img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  border: none;
+}
+
+.pep-equip-window .pep-other-entry.off img {
+  filter: grayscale(1);
+  opacity: 0.5;
+}
+
+.pep-equip-window .pep-other-entry button {
+  position: absolute;
+  width: 16px;
+  height: 16px;
+  min-height: 0;
+  padding: 0;
+  margin: 0;
+  font-size: 9px;
+  line-height: 14px;
+}
+
+.pep-equip-window .pep-other-entry .pep-other-toggle {
+  left: -4px;
+  bottom: -4px;
+}
+
+.pep-equip-window .pep-other-entry .pep-other-remove {
+  right: -4px;
+  top: -4px;
+}
+
+.pep-equip-window .pep-other .hint {
+  margin: 0;
+}
+
+/* Warnings and footer */
+
+.pep-equip-window .pep-warnings {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  font-size: 0.85em;
+  color: #e9a23b;
+}
+
+.pep-equip-window .pep-ew-footer {
+  display: flex;
+  gap: 6px;
+}
+
+.pep-equip-window .pep-ew-footer button {
+  flex: 1 1 0;
+}
+
+/* -------------------------------------------- */
+/*  Chat card (§7.4)                            */
+/* -------------------------------------------- */
+
+.pep-card .pep-card-title {
+  margin: 0 0 4px;
+}
+
+.pep-card p {
+  margin: 2px 0;
+}
