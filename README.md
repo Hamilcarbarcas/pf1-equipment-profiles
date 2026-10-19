@@ -92,9 +92,13 @@ something off.
 - **Main Hand** holds a weapon. **Off Hand** holds a weapon or a shield.
 - The **chain** between them shows the grip. A linked chain means two-handed; a broken chain
   means one-handed. Click it to switch, when the weapon allows.
-- A two-handed weapon shows in both hand slots. Only a buckler can share the off hand with it.
-  Dropping anything else there switches the weapon to one hand, or takes it off if it can only
-  be used two-handed.
+- A two-handed weapon shows in both hand slots. Dropping one on the off hand puts it in your
+  main hand. Only a buckler can share the off hand with it. Dropping anything else there
+  switches the weapon to one hand, or takes it off if it can only be used two-handed.
+- A weapon can only be used two-handed if its type is Two-Handed, or if its **Hands** (on the
+  weapon's Details tab) is 2 or more. That's how bows, crossbows, and muskets are marked.
+  Ranged weapons with Hands 1, like pistols, darts, and slings, are one-handed and can go in
+  the off hand. PF1's hand crossbow comes with Hands 2; set it to 1 if you dual-wield them.
 - Equipping sets each weapon's hold on its item sheet. A dagger in each hand becomes one-handed
   and off-hand.
 - If a weapon's attack actions set their own hold, the window warns you, because the grip set

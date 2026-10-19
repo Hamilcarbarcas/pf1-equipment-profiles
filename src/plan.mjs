@@ -81,7 +81,11 @@ export function buildPlan(actor, profile) {
 
     claimed.add(item.id);
     const to = { equipped: true, held: null };
-    if (item.type === "weapon") to.held = key === "offHand" ? "oh" : (slot.held ?? mainHandGrip(item).held);
+    if (item.type === "weapon") {
+      // A fixed grip wins over a stored one, which may predate a Hands or type edit.
+      const grip = mainHandGrip(item);
+      to.held = key === "offHand" ? "oh" : grip.fixed ? grip.held : (slot.held ?? grip.held);
+    }
     targets.set(item.id, { item, slot: key, to });
   }
 

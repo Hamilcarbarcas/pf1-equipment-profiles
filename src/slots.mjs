@@ -133,6 +133,13 @@ export function layerKind(item) {
 export const isHeavyArmor = (item) =>
   item?.type === "equipment" && item.subType === "armor" && item.system.equipmentSubtype === "heavyArmor";
 
+/**
+ * A weapon that can only be wielded two-handed, so never off-hand (§3.3): PF1's Two-Handed type,
+ * or its "Hands" field at 2 or more (how bows, crossbows, and long guns are marked).
+ */
+export const isTwoHandedOnly = (item) =>
+  item?.type === "weapon" && (item.system.weaponSubtype === "2h" || (Number(item.system.hands) || 1) >= 2);
+
 export const isShield = (item) => item?.type === "equipment" && item.subType === "shield";
 
 /** PF1's misc shield subtype, commented in its proficiency map as the buckler (§2). */
@@ -145,7 +152,7 @@ export function fits(item, slot) {
     case "mainHand":
       return item.type === "weapon";
     case "offHand":
-      return region === "hand";
+      return region === "hand" && !isTwoHandedOnly(item);
     case "ring1":
     case "ring2":
       return region === "ring";
@@ -176,15 +183,16 @@ export function fitsOther(item) {
   return region === "other" || item.type === "weapon";
 }
 
-/** Hold the main hand defaults to, and whether it can be toggled (§3.3). */
+/**
+ * Hold the main hand defaults to, and whether it can be toggled (§3.3). Only a one-handed melee
+ * weapon offers a choice; ranged weapons follow their Hands field.
+ */
 export function mainHandGrip(item) {
+  if (isTwoHandedOnly(item)) return { held: "2h", fixed: true };
   switch (item.system.weaponSubtype) {
     case "light":
-      return { held: "1h", fixed: true };
-    case "2h":
-      return { held: "2h", fixed: true };
     case "ranged":
-      return { held: "2h", fixed: false };
+      return { held: "1h", fixed: true };
     default:
       return { held: "1h", fixed: false };
   }

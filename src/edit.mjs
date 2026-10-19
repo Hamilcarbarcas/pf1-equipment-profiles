@@ -9,7 +9,7 @@
 
 import { blockingToggle, disabledSet, isOff } from "./actor-slots.mjs";
 import { resolveRef } from "./match.mjs";
-import { BARS, RINGS, SLOTS, fits, fitsBar, isBuckler, liveHeld, mainHandGrip } from "./slots.mjs";
+import { BARS, RINGS, SLOTS, fits, fitsBar, isBuckler, isTwoHandedOnly, liveHeld, mainHandGrip } from "./slots.mjs";
 import { itemRef } from "./store.mjs";
 
 export const IGNORE = () => ({ state: "ignore", item: null, held: null });
@@ -69,6 +69,9 @@ function freeMirroredOff(actor, profile, live) {
  */
 export function place(actor, profile, key, item, { live = false } = {}) {
   if (!item || actor.items.get(item.id) !== item) return { ok: false, warn: "PF1EP.Warn.NotThisActor" };
+
+  // A two-handed-only weapon dropped on the off hand means "wield it": main hand, 2h (§3.3).
+  if (key === "offHand" && isTwoHandedOnly(item)) key = "mainHand";
 
   // Disabled on this actor (§3.7): the target slot, or every slot the item could use.
   const off = disabledSet(actor);

@@ -24,6 +24,7 @@ import {
   isEquippable,
   isHeavyArmor,
   isLayer,
+  isTwoHandedOnly,
   layerKind,
   mainHandGrip,
   regionOf,
@@ -461,7 +462,7 @@ export class EquipWindow extends HandlebarsApplicationMixin(ApplicationV2) {
     const open = (key) => profile.slots[key].state !== "item";
     if (region === "hand") {
       if (item.type !== "weapon") return "offHand";
-      if (open("mainHand")) return "mainHand";
+      if (open("mainHand") || isTwoHandedOnly(item)) return "mainHand";
       return mirrored(this.actor, profile) ? "mainHand" : "offHand";
     }
     if (region === "ring") return RINGS.find(open) ?? "ring1";
