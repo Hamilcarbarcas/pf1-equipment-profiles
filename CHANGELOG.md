@@ -30,6 +30,9 @@ matching each release tag.
 - **Slot Icons** settings (GM): pick the icon for each empty slot, and set the icons' color and
   hue.
 - **Announce in Chat** setting: post a card listing what changed.
+- **Unequipped weapons** are grayed out and struck through on the Combat tab, and attacking with
+  one asks first, with an **Attack Anyway** option. Covers the sheet, hotbar, token HUD, and
+  macros. Turn it off with the **Unequipped Weapons** setting.
 - API at `game.modules.get("pf1-equipment-profiles").api`, with equip gates and hooks for other
   modules.
 

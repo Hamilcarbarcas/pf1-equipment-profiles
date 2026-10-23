@@ -10,7 +10,17 @@
         "Name": "Slot Icons",
         "Label": "Configure Slot Icons",
         "Hint": "Pick the empty-slot icons and their color and hue."
+      },
+      "Unequipped": {
+        "Name": "Unequipped Weapons",
+        "Hint": "Gray out unequipped weapons on the combat tab, and ask before attacking with one."
       }
+    },
+    "Unequipped": {
+      "Title": "Weapon Not Equipped",
+      "Body": "<strong>{item}</strong> isn't equipped. Attack with it anyway?",
+      "UseAnyway": "Attack Anyway",
+      "Row": "Not equipped"
     },
     "Slot": {
       "MainHand": "Main Hand",

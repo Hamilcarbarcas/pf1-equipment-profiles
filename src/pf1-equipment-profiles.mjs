@@ -5,6 +5,8 @@ import { registerLayerSection } from "./sheet/layer-section.mjs";
 import { registerActorSlotsSection } from "./sheet/actor-slots-section.mjs";
 import { registerSlotBlocking } from "./actor-slots.mjs";
 import { registerSettingsScroll } from "./sheet/settings-scroll.mjs";
+import { registerUnequippedGuard } from "./unequipped.mjs";
+import { registerUnequippedRows } from "./sheet/unequipped-rows.mjs";
 import { SlotStyleConfig } from "./apps/slot-style-config.mjs";
 import { api } from "./api.mjs";
 
@@ -25,5 +27,7 @@ Hooks.once("init", () => {
   registerActorSlotsSection();
   registerSlotBlocking();
   registerSettingsScroll();
+  registerUnequippedGuard();
+  registerUnequippedRows();
   game.modules.get(MODULE_ID).api = api;
 });

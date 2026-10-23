@@ -23,6 +23,13 @@
           "verified": "11.11"
         }
       }
+    ],
+    "recommends": [
+      {
+        "id": "lib-wrapper",
+        "type": "module",
+        "reason": "Lets the unequipped-weapon prompt share PF1's item use with other modules. Without it the prompt still works, through a plain override."
+      }
     ]
   },
   "esmodules": [

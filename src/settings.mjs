@@ -3,10 +3,12 @@
  */
 
 import { MODULE_ID } from "./const.mjs";
+import { setUnequippedEnabled } from "./unequipped.mjs";
 
 export const KEYS = Object.freeze({
   announce: "announce",
   slotStyle: "slotStyle",
+  unequippedWeapons: "unequippedWeapons",
 });
 
 export const DEFAULT_STYLE = Object.freeze({ color: "#b3a37f", hue: 0, tint: true, images: {} });
@@ -19,6 +21,25 @@ export function registerSettings() {
     config: true,
     type: Boolean,
     default: false,
+  });
+
+  // §16: gray out unequipped weapons on the combat tab and ask before using one.
+  game.settings.register(MODULE_ID, KEYS.unequippedWeapons, {
+    scope: "world",
+    name: "PF1EP.Settings.Unequipped.Name",
+    hint: "PF1EP.Settings.Unequipped.Hint",
+    config: true,
+    type: Boolean,
+    default: true,
+    onChange: (value) => {
+      setUnequippedEnabled(value);
+      for (const app of foundry.applications.instances.values()) {
+        if (app.document instanceof Actor) app.render();
+      }
+      for (const app of Object.values(ui.windows)) {
+        if (app.actor) app.render();
+      }
+    },
   });
 
   // §6.5: placeholder icon look, edited through its own menu.

@@ -23,6 +23,7 @@ named loadouts you can swap to in one click.
   - [Disabled slots](#disabled-slots)
 - [Equipping a profile](#equipping-a-profile)
   - [Matching items](#matching-items)
+- [Unequipped weapons](#unequipped-weapons)
 - [Settings](#settings)
   - [Slot icons](#slot-icons)
 - [For module developers](#for-module-developers)
@@ -160,11 +161,23 @@ Items are matched by name, so a profile keeps working after you move an item in 
 or replace it with a fresh copy. Identifying an item doesn't break the match. When two items share
 a name, the one already in place wins, then an unequipped one.
 
+## Unequipped weapons
+
+On the Combat tab, a weapon that isn't equipped is grayed out and struck through. Attacking with
+one, from the sheet, the hotbar, the token HUD, or a macro, first asks whether to **Attack
+Anyway**. Cancel or close the prompt and nothing is rolled. Equip the weapon first, or draw it in
+play, and it attacks as normal.
+
+This covers weapons from the Inventory tab only. Attacks you've added on the Combat tab, like
+natural attacks, have no equipped state and aren't affected. Turn it off with the **Unequipped
+Weapons** setting.
+
 ## Settings
 
 | Setting | Effect |
 | --- | --- |
 | **Announce in Chat** | Posts a chat card listing what changed whenever a profile is equipped. |
+| **Unequipped Weapons** | Grays out unequipped weapons on the Combat tab and asks before attacking with one. On by default. |
 | **Slot Icons** (GM) | Opens the slot icon settings below. |
 
 ### Slot icons

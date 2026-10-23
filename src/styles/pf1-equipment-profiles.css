@@ -614,3 +614,16 @@
 .pep-card p {
   margin: 2px 0;
 }
+
+/* -------------------------------------------- */
+/*  Unequipped weapons on the combat tab (§16)  */
+/* -------------------------------------------- */
+
+.tab.combat li.item.pep-unequipped > .item-name,
+.tab.combat li.item.pep-unequipped > .item-detail:not(.item-actions) {
+  opacity: 0.5;
+}
+
+.tab.combat li.item.pep-unequipped > .item-name h4 {
+  text-decoration: line-through;
+}
