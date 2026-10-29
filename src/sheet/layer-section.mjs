@@ -54,6 +54,7 @@ function inject(sheet, html, options) {
     marker: MARKER,
     configured: isLayer(item),
     badge: "",
+    niche: true,
   });
   badge();
 }

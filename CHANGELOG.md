@@ -43,3 +43,6 @@ matching each release tag.
 ---
 
 Earlier releases: see [GitHub Releases](https://github.com/Hamilcarbarcas/pf1-equipment-profiles/releases).
+
+### Changed
+- The **Equipment Profiles** section is hidden on armor that isn't marked wearable over other armor. A **Show N more sections** line at the foot of the Advanced tab reveals it (shared sheet kit 1.7.0).

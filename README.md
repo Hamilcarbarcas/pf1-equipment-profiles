@@ -117,7 +117,8 @@ you're told which.
 Armor marked **Wearable with other armor** goes in the **Over Armor** slot, which hides mostly
 under the Armor slot until something is in it. Armored coats and armored kilts are marked
 automatically. To change it for any armor, use the checkbox in its **Equipment Profiles**
-section on the Advanced tab.
+section on the Advanced tab. On armor that isn't marked, that section is hidden: click **Show N more sections**
+at the foot of the tab to reveal it.
 
 A coat worn alone counts as your armor, so putting a breastplate in Armor takes the coat off. To
 wear it over the breastplate, put it in Over Armor as well. The window warns you when a coat or
