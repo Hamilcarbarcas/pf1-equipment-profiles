@@ -345,6 +345,74 @@
   cursor: default;
 }
 
+/* Off hand and Shield (§17.8): the Shield sits tucked behind the off hand; it comes to the front
+   while it uses the hand, and slides out to the right while hands-free. */
+
+.pep-equip-window .pep-hand-stack {
+  position: relative;
+  width: var(--pep-slot);
+  height: var(--pep-slot);
+  flex: 0 0 var(--pep-slot);
+  transition: flex-basis 0.15s ease;
+}
+
+.pep-equip-window .pep-hand-stack.open {
+  flex-basis: calc(2 * var(--pep-slot) + var(--pep-gap));
+}
+
+.pep-equip-window .pep-hand-stack .pep-slot {
+  position: absolute;
+  top: 0;
+  transition: left 0.15s ease;
+}
+
+.pep-equip-window .pep-hand-stack .pep-slot[data-slot="offHand"] {
+  left: 0;
+  z-index: 2;
+  background: rgb(12, 10, 6);
+}
+
+.pep-equip-window .pep-hand-stack .pep-slot[data-slot="shield"] {
+  left: calc(var(--pep-slot) / 3);
+  z-index: 1;
+}
+
+.pep-equip-window .pep-hand-stack.open .pep-slot[data-slot="shield"] {
+  left: calc(var(--pep-slot) + var(--pep-gap));
+  z-index: 3;
+}
+
+.pep-equip-window .pep-hand-stack.front .pep-slot[data-slot="shield"] {
+  left: 0;
+  z-index: 3;
+  background: rgb(12, 10, 6);
+}
+
+.pep-equip-window .pep-hand-stack.front .pep-slot[data-slot="offHand"] {
+  left: calc(var(--pep-slot) / 3);
+  z-index: 1;
+}
+
+/* A grip that relies on a rule (§17.8). */
+.pep-equip-window .pep-slot .pep-req {
+  position: absolute;
+  left: 2px;
+  top: 2px;
+  font-size: 0.75em;
+  color: #9fd3ff;
+  text-shadow: 0 0 2px #000;
+}
+
+.pep-equip-window .pep-slot .pep-req.unmet {
+  color: #e9a23b;
+}
+
+.pep-equip-window .pep-conflicts .pep-resolve {
+  width: auto;
+  line-height: 1.6;
+  padding: 0 8px;
+}
+
 /* Item pane */
 
 /* `contain: size` keeps the list out of the row's height, so the doll alone sizes the window and
@@ -619,11 +687,72 @@
 /*  Unequipped weapons on the combat tab (§16)  */
 /* -------------------------------------------- */
 
-.tab.combat li.item.pep-unequipped > .item-name,
+/* The hand controls stay undimmed, so the equip toggle's own off state reads. */
+.tab.combat li.item.pep-unequipped > .item-name > :not(.pep-hand-controls),
 .tab.combat li.item.pep-unequipped > .item-detail:not(.item-actions) {
   opacity: 0.5;
 }
 
 .tab.combat li.item.pep-unequipped > .item-name h4 {
   text-decoration: line-through;
+}
+
+/* -------------------------------------------- */
+/*  Grips (§17.3, §17.8)                        */
+/* -------------------------------------------- */
+
+.tab.combat li.item > .item-name .pep-hand-controls {
+  display: flex;
+  flex: 0 0 auto;
+  align-items: center;
+  gap: 4px;
+  margin: 0 4px 0 auto;
+}
+
+.tab.combat li.item > .item-name .pep-grip-chip {
+  flex: 0 0 auto;
+  min-width: 2.2em;
+  text-align: center;
+  padding: 0 4px;
+  border: 1px solid var(--color-border-dark-4, #999);
+  border-radius: 3px;
+  font-size: 0.75em;
+  line-height: 1.4;
+  cursor: pointer;
+}
+
+.tab.combat li.item > .item-name .pep-grip-chip.fixed {
+  opacity: 0.55;
+  cursor: default;
+}
+
+.tab.combat li.item > .item-name .pep-grip-chip.invalid {
+  border-color: #c9302c;
+  color: #c9302c;
+}
+
+.tab.combat li.item > .item-name .pep-equip-toggle {
+  flex: 0 0 1.2em;
+  text-align: center;
+  opacity: 0.35;
+  cursor: pointer;
+}
+
+.tab.combat li.item > .item-name .pep-equip-toggle.active {
+  opacity: 1;
+}
+
+.tab.combat li.item > .item-name .pep-equip-toggle.spacer {
+  visibility: hidden;
+  cursor: default;
+}
+
+.sheet .form-group.pep-grips .pep-grips-default {
+  opacity: 0.6;
+  font-size: 0.85em;
+}
+
+.pep-hand-prompt .hint {
+  opacity: 0.75;
+  font-size: 0.9em;
 }

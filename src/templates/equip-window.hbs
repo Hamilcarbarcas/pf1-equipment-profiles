@@ -5,6 +5,7 @@
   {{#if img}}<img class="pep-item-img" src="{{img}}" alt="">{{else}}{{{glyph}}}{{/if}}
   {{#if (eq state "empty")}}<i class="fa-solid fa-ban pep-empty-mark" inert></i>{{/if}}
   {{#if missing}}<i class="fa-solid fa-triangle-exclamation pep-badge" inert></i>{{/if}}
+  {{#if requires}}<i class="fa-solid {{requires.icon}} pep-req{{#unless requires.met}} unmet{{/unless}}" inert></i>{{/if}}
 </div>
 {{/inline}}
 
@@ -54,7 +55,10 @@
         {{else}}
         <span class="pep-link placeholder"></span>
         {{/if}}
-        {{#with off}}{{> pepSlot}}{{/with}}
+        <div class="pep-hand-stack{{#if handStack.front}} front{{/if}}{{#if handStack.open}} open{{/if}}{{#if off.disabled}} slot-off{{/if}}">
+          {{#with shield}}{{> pepSlot}}{{/with}}
+          {{#with off}}{{> pepSlot}}{{/with}}
+        </div>
       </div>
     </section>
 
@@ -103,6 +107,13 @@
     </div>
     {{/each}}
   </section>
+
+  {{#if conflicts.length}}
+  <ul class="pep-warnings pep-conflicts">
+    {{#each conflicts}}<li><i class="fa-solid fa-hand" inert></i> {{this}}</li>{{/each}}
+    <li><button type="button" class="pep-resolve" data-action="resolveHands"><i class="fa-solid fa-hand-back-fist" inert></i> {{localize "PF1EP.Hands.Resolve"}}</button></li>
+  </ul>
+  {{/if}}
 
   {{#if warnings.length}}
   <ul class="pep-warnings">

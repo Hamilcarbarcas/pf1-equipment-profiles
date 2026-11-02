@@ -38,8 +38,8 @@ function normalizeSlot(slot) {
   return { ...IGNORE };
 }
 
-/** Stored profile shape. 2: clothing moved from a slot to Other (§3.2). */
-export const PROFILE_VERSION = 2;
+/** Stored profile shape. 2: clothing moved from a slot to Other (§3.2). 3: the Shield slot (§17.10). */
+export const PROFILE_VERSION = 3;
 
 export function normalize(profile) {
   const slots = blankSlots();
@@ -48,11 +48,25 @@ export function normalize(profile) {
     .filter((o) => o?.item?.name)
     .map((o) => ({ item: { ...o.item }, equipped: o.equipped !== false }));
 
+  const version = profile?.version ?? 1;
+
   // v1 → v2. Gated on the version because merge-writes leave the stale `slots.clothing` key behind.
   const clothing = profile?.slots?.clothing;
-  if ((profile?.version ?? 1) < 2 && clothing?.state === "item" && clothing.item?.name) {
+  if (version < 2 && clothing?.state === "item" && clothing.item?.name) {
     const listed = other.some((o) => o.item.id === clothing.item.id);
     if (!listed) other.push({ item: { ...clothing.item }, equipped: true });
+  }
+
+  // v2 → v3: a shield moves from the off hand to its own slot, and an Empty off hand empties both.
+  // Gated on the version: v3 writes the off hand explicitly, so nothing stale is left to re-migrate.
+  if (version < 3) {
+    const off = profile?.slots?.offHand;
+    if (off?.state === "item" && off.item?.type === "equipment") {
+      slots.shield = { state: "item", item: { ...off.item }, held: null };
+      slots.offHand = { ...IGNORE };
+    } else if (off?.state === "empty") {
+      slots.shield = { state: "empty", item: null, held: null };
+    }
   }
 
   return {

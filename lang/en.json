@@ -25,7 +25,8 @@
     "Slot": {
       "MainHand": "Main Hand",
       "OffHand": "Off Hand",
-      "ArmorOver": "Over Armor"
+      "ArmorOver": "Over Armor",
+      "Shield": "Shield"
     },
     "Controls": {
       "Select": "Equipment profile (✓ = currently equipped)",
@@ -73,7 +74,9 @@
       "Delete": "Delete",
       "Save": "Save",
       "DeleteTitle": "Delete Equipment Profile",
-      "DeleteConfirm": "Delete the profile <strong>{profile}</strong>?"
+      "DeleteConfirm": "Delete the profile <strong>{profile}</strong>?",
+      "Needs": "{item} (needs {needs})",
+      "GripNeeds": "Two-handed; one-handed while {needs}"
     },
     "StyleConfig": {
       "Title": "Slot Icons",
@@ -125,7 +128,66 @@
       "LayerOverHeavy": {
         "coat": "{item} has no effect over heavy armor.",
         "kilt": "{item} adds no armor bonus over heavy armor."
+      },
+      "GripNotAllowed": "{item} can't take that grip now."
+    },
+    "Grip": {
+      "1h": "1H",
+      "2h": "2H",
+      "oh": "OH",
+      "none": "Free"
+    },
+    "Grips": {
+      "Label": "Grips",
+      "Default": "default",
+      "Hint": "Grips this can be wielded with. The default follows Type and Hands.",
+      "NeedOne": "Keep at least one grip.",
+      "ChipCycle": "Click to change the grip.",
+      "ChipInvalid": "Not allowed now: click to fix.",
+      "ChipActions": "Set by the action instead: {actions}",
+      "ToggleEquip": "Equip in this grip's hand(s)",
+      "ToggleUnequip": "Unequip"
+    },
+    "Hands": {
+      "Req": {
+        "Mounted": "Mounted",
+        "Animated": "Animated Shield"
+      },
+      "Nothing": "nothing",
+      "FreeFirst": "Free the hand first and nothing is unequipped.",
+      "Resolve": "Resolve",
+      "Lapsed": "{item}: a grip rule on {actor} has ended.",
+      "Conflict": {
+        "OverBudget": "Not enough hands for {items}.",
+        "InvalidGrip": "{item} is held in a grip it can't take now."
+      },
+      "Regrab": {
+        "Title": "Animated Shield",
+        "Body": "{shield} is no longer animated.",
+        "Unequips": "Re-grab unequips: {items}.",
+        "Regrab": "Re-grab",
+        "Drop": "Drop"
+      },
+      "Regrip": {
+        "Title": "Two Hands Needed",
+        "Body": "{item} can't be held one-handed now.",
+        "Unequips": "Regrip Two-Handed unequips: {items}.",
+        "Regrip": "Regrip Two-Handed",
+        "Stow": "Stow {item}"
+      },
+      "Use": {
+        "Title": "Grip Not Allowed",
+        "Body": "{item} is held in a grip it can't take now."
+      },
+      "Unmet": {
+        "Title": "Needs {needs}",
+        "Body": "{profile} needs {needs}. Without it, {items} can't be equipped.",
+        "DropShield": "Drop Shield",
+        "Without": "Apply Without {items}"
       }
+    },
+    "Buckler": {
+      "BuffName": "Buckler: Arm in Use"
     }
   }
 }

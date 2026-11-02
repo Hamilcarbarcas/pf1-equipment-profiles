@@ -24,6 +24,11 @@ named loadouts you can swap to in one click.
 - [Equipping a profile](#equipping-a-profile)
   - [Matching items](#matching-items)
 - [Unequipped weapons](#unequipped-weapons)
+- [Grips](#grips)
+- [Hand rules](#hand-rules)
+  - [Animated shields](#animated-shields)
+  - [Lances](#lances)
+  - [Bucklers](#bucklers)
 - [Settings](#settings)
   - [Slot icons](#slot-icons)
 - [For module developers](#for-module-developers)
@@ -90,20 +95,30 @@ something off.
 
 ### Hands
 
-- **Main Hand** holds a weapon. **Off Hand** holds a weapon or a shield.
-- The **chain** between them shows the grip. A linked chain means two-handed; a broken chain
+- **Main Hand** and **Off Hand** hold weapons. A shield goes in the **Shield** slot, tucked
+  behind the off hand. Dropping a shield on either hand puts it there.
+- A shield that needs its hand sits in front of the off hand, and the off hand is taken. A
+  buckler, or a shield while it's animated, needs no hand: its slot slides out to the right, and
+  the off hand stays free for a weapon or a two-handed grip.
+- The **chain** between the hands shows the grip. A linked chain means two-handed; a broken chain
   means one-handed. Click it to switch, when the weapon allows.
 - A two-handed weapon shows in both hand slots. Dropping one on the off hand puts it in your
-  main hand. Only a buckler can share the off hand with it. Dropping anything else there
-  switches the weapon to one hand, or takes it off if it can only be used two-handed.
+  main hand. Dropping something beside it that needs the off hand switches the weapon to one
+  hand, or takes it off if it can only be used two-handed.
 - A weapon can only be used two-handed if its type is Two-Handed, or if its **Hands** (on the
   weapon's Details tab) is 2 or more. That's how bows, crossbows, and muskets are marked.
   Ranged weapons with Hands 1, like pistols, darts, and slings, are one-handed and can go in
-  the off hand. PF1's hand crossbow comes with Hands 2; set it to 1 if you dual-wield them.
+  the off hand. PF1's hand crossbow comes with Hands 2; set it to 1 if you dual-wield them. Any
+  weapon's grips can be set by hand: see [Grips](#grips).
 - Equipping sets each weapon's hold on its item sheet. A dagger in each hand becomes one-handed
   and off-hand.
 - If a weapon's attack actions set their own hold, the window warns you, because the grip set
   here won't reach those actions.
+- A small icon on a hand slot marks a grip that needs something, like a horse on a lance held
+  one-handed while mounted. Profiles that need something say so in the profile dropdown, for
+  example "Lance & Shield (Mounted)". See [Hand rules](#hand-rules).
+- When the hands don't add up, such as an animated shield running out while you hold a
+  greatsword, the window lists the problem with a **Resolve** button.
 
 ### Rings
 
@@ -117,8 +132,7 @@ you're told which.
 Armor marked **Wearable with other armor** goes in the **Over Armor** slot, which hides mostly
 under the Armor slot until something is in it. Armored coats and armored kilts are marked
 automatically. To change it for any armor, use the checkbox in its **Equipment Profiles**
-section on the Advanced tab. On armor that isn't marked, that section is hidden: click **Show N more sections**
-at the foot of the tab to reveal it.
+section on the Advanced tab. On armor that isn't marked, that section is hidden: tick it under **Optional Sections** on the same tab.
 
 A coat worn alone counts as your armor, so putting a breastplate in Armor takes the coat off. To
 wear it over the breastplate, put it in Over Armor as well. The window warns you when a coat or
@@ -173,6 +187,55 @@ This covers weapons from the Inventory tab only. Attacks you've added on the Com
 natural attacks, have no equipped state and aren't affected. Turn it off with the **Unequipped
 Weapons** setting.
 
+## Grips
+
+- **On the Combat tab,** each weapon, and each attack that makes an attack roll, shows its grip,
+  **1H**, **2H**, or **OH**, next to its name. Click it to switch to the next grip the item can take. A weapon in your hands
+  switches the way the equipment window would, so going two-handed takes a shield off. A grip
+  that's no longer allowed shows in red; click it to fix it.
+- **The fist** beside a weapon's grip equips or unequips it. Equipping puts it in the hand(s) its
+  grip names and unequips whatever was there, the way the equipment window would.
+- **On the item,** weapons and attacks have a **Grips** row on the Details tab, under Hands (or
+  Held). Tick the grips the item can be wielded with. Left at the default, it follows the type
+  and Hands. The Held choices on the item, on its actions, and in the attack dialog only offer the
+  ticked grips.
+
+## Hand rules
+
+Some grips depend on what's happening. Each one is switched on by a buff with a boolean flag (on
+the buff's Advanced tab), so any buff can supply it.
+
+### Animated shields
+
+- While a buff with the flag `animatedShield` is active, your shield needs no hand. A
+  two-handed weapon or an off-hand weapon fits beside it, and the shield still gives its AC.
+- When the buff ends, you're asked to **Re-grab** the shield or **Drop** it. Re-grab takes off
+  whatever is in the way: a two-handed weapon switches to one hand, or is unequipped if it can't.
+  Drop unequips the shield. The prompt waits, so you can free a hand first, and Re-grab then
+  takes nothing off. Turning the buff off early asks the same.
+- A profile with a shield beside a two-handed weapon needs the buff, and its name shows
+  "(Animated Shield)". Equipping it without the buff asks whether to **Drop Shield** or
+  **Cancel**.
+
+### Lances
+
+- A lance can be wielded one-handed while a buff with the flag `mounted` is active. Click the
+  chain to switch. While you aren't mounted, the chain is locked, and its tooltip says why.
+- One-handed, a lance adds your Strength once, like any one-handed weapon.
+- A profile can hold a one-handed lance and a shield; its name shows "(Mounted)". Equipping it
+  while you aren't mounted asks whether to **Drop Shield** (the lance goes two-handed) or
+  **Cancel**.
+- Dismounting with the lance in one hand asks you to **Regrip Two-Handed**, which frees the off
+  hand, or **Stow** the lance. With nothing in your off hand, the lance just switches to two
+  hands.
+
+### Bucklers
+
+- With a buckler worn, an attack made off-hand or two-handed takes a –1 penalty. In combat it
+  also costs the buckler's AC until the start of your next turn, through a **Buckler: Arm in Use**
+  buff that's removed when your turn comes.
+- Bows and crossbows don't count, and neither does an animated buckler.
+
 ## Settings
 
 | Setting | Effect |
@@ -219,3 +282,29 @@ the equip. Each change lists the item, slot, `op` (`equip`, `unequip`, or `regri
 
 **Hooks:** `pf1EquipmentProfiles.preApply(actor, profile, plan)` runs before the gates; return
 `false` to cancel. `pf1EquipmentProfiles.apply(actor, profile, result)` runs after the write.
+`pf1EquipmentProfiles.handsChanged(actor, before, after)` runs when any held item's grip
+changes; `before` and `after` map item IDs to grips (`before` is `null` the first time).
+
+**Hands** are under `api.hands`:
+
+| Member | Does |
+| --- | --- |
+| `usage(item)` | `{ grip, hands, side }` for an equipped weapon or shield, or `null`. `grip` is `1h`, `2h`, `oh`, or `none`. |
+| `grips(item)` | Every grip the item can take, with `met`, `requires`, and `rule`. |
+| `availableGrips(item, { profile })` | Grip names usable now. `profile: true` includes grips whose requirement isn't met. |
+| `state(actor)` | The held items, hands used and free, and any `conflicts`. |
+| `setGrip(item, grip, { gates })` | Switches a weapon or attack to a grip, through the same path as the equipment window. |
+| `resolve(actor)` | Reopens the prompt for each conflict. |
+| `registerRule(id, rule)` / `unregisterRule(id)` | Adds a hand rule. |
+
+A rule adds a grip, or forces one, while a requirement holds. The requirement is a boolean flag
+name or a function of the actor. `lapse` says what happens when it stops holding: `"regrab"`
+(the shield prompt), `"regrip"` (the lance prompt), or `"warn"`.
+
+```js
+api.hands.registerRule("mountedLance", {
+  applies: (item) => item.system.baseTypes?.includes("Lance"),
+  add: [{ grip: "1h", requires: "mounted", label: "Mounted", icon: "fa-horse" }],
+  lapse: "regrip",
+});
+```

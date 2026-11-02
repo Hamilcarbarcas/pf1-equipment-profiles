@@ -10,26 +10,27 @@ import { CSS, TEMPLATES } from "../const.mjs";
 import { applyProfile } from "../apply.mjs";
 import { capture } from "../capture.mjs";
 import { findInContainer, resolveRef } from "../match.mjs";
-import { isCurrent } from "../plan.mjs";
+import { isCurrent, requirementSuffix } from "../plan.mjs";
 import {
   LEFT,
   RIGHT,
   RINGS,
+  SHIELD,
   SLOTS,
   fits,
   BARS,
   barOf,
   fitsOther,
-  isBuckler,
   isEquippable,
   isHeavyArmor,
   isLayer,
-  isTwoHandedOnly,
   layerKind,
-  mainHandGrip,
   regionOf,
   slotLabel,
 } from "../slots.mjs";
+import { MAIN_GRIPS, canOffHand, defaultGrip, grips, isShield, mainGrip, requirementFor } from "../hands.mjs";
+import { handState } from "../hand-state.mjs";
+import { resolveConflicts } from "../hand-actions.mjs";
 import { deleteProfile, findProfile, listProfiles, normalize, refLabel, writeProfile } from "../store.mjs";
 import { getSelected, setSelected } from "../selection.mjs";
 import { clearSlot, markEmpty, mirrored, place, toggleHeld } from "../edit.mjs";
@@ -59,6 +60,7 @@ export class EquipWindow extends HandlebarsApplicationMixin(ApplicationV2) {
       selectSlot: onSelectSlot,
       assignItem: onAssignItem,
       toggleHeld: onToggleHeld,
+      resolveHands: onResolveHands,
       toggleOther: onToggleOther,
       removeOther: onRemoveOther,
       pickIcon: onPickIcon,
@@ -159,8 +161,16 @@ export class EquipWindow extends HandlebarsApplicationMixin(ApplicationV2) {
     const main = draft.slots.mainHand;
     const mainItem = resolved.mainHand ?? null;
     const twoHanded = main.state === "item" && main.held === "2h";
-    const offItem = resolved.offHand ?? null;
-    const mirror = twoHanded && !!mainItem && !(offItem && isBuckler(offItem));
+    const mirror = twoHanded && !!mainItem;
+    const shieldItem = resolved[SHIELD] ?? null;
+    const shieldGrip = shieldItem ? (draft.slots[SHIELD].held ?? defaultGrip(shieldItem)) : null;
+
+    /** A grip that relies on a rule: badge plus tooltip suffix (§17.8). */
+    const reqView = (item, grip) => {
+      const req = item && grip ? requirementFor(item, grip) : null;
+      if (!req) return null;
+      return { icon: req.icon ?? "fa-circle-info", met: req.met, label: req.label ? t(req.label) : String(req.requires) };
+    };
 
     const slotView = (key) => {
       const slot = draft.slots[key];
@@ -178,6 +188,7 @@ export class EquipWindow extends HandlebarsApplicationMixin(ApplicationV2) {
         glyph: glyphHtml(key, style),
         tooltip: label,
         disabled: isOff(key, disabled),
+        requires: null,
       };
       if (slot.state === "empty") view.tooltip = `${label}: ${t("PF1EP.Window.Empty")}`;
       else if (slot.state === "item") {
@@ -199,6 +210,17 @@ export class EquipWindow extends HandlebarsApplicationMixin(ApplicationV2) {
       return { stack: true, armor: slotView("armor"), over: slotView("armorOver") };
     });
 
+    const mainView = slotView("mainHand");
+    const shieldView = slotView(SHIELD);
+    for (const [view, item, grip] of [[mainView, mainItem, main.held], [shieldView, shieldItem, shieldGrip]]) {
+      view.requires = reqView(item, grip);
+      if (view.requires) view.tooltip = t("PF1EP.Window.Needs", { item: view.tooltip, needs: view.requires.label });
+    }
+    const handStack = {
+      front: !!shieldItem && shieldGrip !== "none",
+      open: (!!shieldItem && shieldGrip === "none") || draft.slots[SHIELD].state === "empty",
+    };
+
     const off = slotView("offHand");
     if (mirror) {
       Object.assign(off, {
@@ -211,14 +233,14 @@ export class EquipWindow extends HandlebarsApplicationMixin(ApplicationV2) {
     }
     let link = null;
     if (mainItem?.type === "weapon" && !isOff("mainHand", disabled) && !isOff("offHand", disabled)) {
-      const grip = mainHandGrip(mainItem);
-      link = {
-        twoHanded,
-        fixed: grip.fixed,
-        tooltip: grip.fixed
-          ? t(twoHanded ? "PF1EP.Window.GripFixed2h" : "PF1EP.Window.GripFixed1h")
-          : t(twoHanded ? "PF1EP.Window.Grip2h" : "PF1EP.Window.Grip1h"),
-      };
+      const grip = mainGrip(mainItem, { profile: !this.live });
+      // Live, a main-hand grip waiting on a rule locks the chain and says why (§17.8).
+      const waiting = this.live ? grips(mainItem).find((g) => MAIN_GRIPS.includes(g.grip) && g.rule && !g.met) : null;
+      let tooltip;
+      if (!grip.fixed) tooltip = t(twoHanded ? "PF1EP.Window.Grip2h" : "PF1EP.Window.Grip1h");
+      else if (waiting) tooltip = t("PF1EP.Window.GripNeeds", { needs: waiting.label ? t(waiting.label) : String(waiting.requires) });
+      else tooltip = t(twoHanded ? "PF1EP.Window.GripFixed2h" : "PF1EP.Window.GripFixed1h");
+      link = { twoHanded, fixed: grip.fixed, tooltip };
     }
 
     const entries = draft.other.map((entry, index) => {
@@ -254,6 +276,15 @@ export class EquipWindow extends HandlebarsApplicationMixin(ApplicationV2) {
       const key = blockingToggle(item, disabled);
       if (key) warnings.push(t("PF1EP.Warn.EquippedInDisabled", { item: item.name, slot: toggleLabel(key) }));
     }
+    // Live hand conflicts (§17.5): listed, with a Resolve button that reopens the prompt.
+    let conflicts = [];
+    if (this.live) {
+      conflicts = handState(this.actor).conflicts.map((c) =>
+        c.kind === "invalidGrip"
+          ? t("PF1EP.Hands.Conflict.InvalidGrip", { item: c.items[0].name })
+          : t("PF1EP.Hands.Conflict.OverBudget", { items: c.items.map((i) => i.name).join(", ") })
+      );
+    }
     const over = resolved.armorOver;
     if (over && isHeavyArmor(resolved.armor)) {
       const kind = layerKind(over);
@@ -267,7 +298,7 @@ export class EquipWindow extends HandlebarsApplicationMixin(ApplicationV2) {
       if (!all.some((p) => p.id === selectedId)) selectedId = all[0]?.id ?? null;
       profiles = all.map((p) => ({
         id: p.id,
-        name: p.name,
+        name: p.name + requirementSuffix(this.actor, p),
         current: isCurrent(this.actor, p),
         selected: p.id === selectedId,
       }));
@@ -283,9 +314,12 @@ export class EquipWindow extends HandlebarsApplicationMixin(ApplicationV2) {
       portrait: this.actor.img,
       left,
       right: RIGHT.map(slotView),
-      main: slotView("mainHand"),
+      main: mainView,
       off,
+      shield: shieldView,
+      handStack,
       link,
+      conflicts,
       bars,
       groups: this.#itemGroups(claimed, disabled),
       filterText: this.filterText,
@@ -305,7 +339,9 @@ export class EquipWindow extends HandlebarsApplicationMixin(ApplicationV2) {
     const at = Object.fromEntries(groups.map((g) => [g.key, g]));
     const items = [...this.actor.items].filter(isEquippable).sort((a, b) => (a.sort ?? 0) - (b.sort ?? 0));
     for (const item of items) {
-      const slots = SLOTS.filter((k) => fits(item, k) && !isOff(k, disabled));
+      const slots = SLOTS.filter((k) => fits(item, k, { profile: !this.live }) && !isOff(k, disabled));
+      // A shield also lists under the off hand, where it lands when dropped there (§17.8).
+      if (isShield(item) && !isOff("offHand", disabled)) slots.push("offHand");
       if (fitsOther(item) && !isOff(barOf(item), disabled)) slots.push(barOf(item));
       const blockedBy = blockingToggle(item, disabled);
       const view = {
@@ -461,8 +497,8 @@ export class EquipWindow extends HandlebarsApplicationMixin(ApplicationV2) {
     const region = regionOf(item);
     const open = (key) => profile.slots[key].state !== "item";
     if (region === "hand") {
-      if (item.type !== "weapon") return "offHand";
-      if (open("mainHand") || isTwoHandedOnly(item)) return "mainHand";
+      if (isShield(item)) return SHIELD;
+      if (open("mainHand") || !canOffHand(item, { profile: !this.live })) return "mainHand";
       return mirrored(this.actor, profile) ? "mainHand" : "offHand";
     }
     if (region === "ring") return RINGS.find(open) ?? "ring1";
@@ -505,7 +541,7 @@ export class EquipWindow extends HandlebarsApplicationMixin(ApplicationV2) {
 
   async toggleHeld() {
     const profile = this.#view();
-    if (toggleHeld(this.actor, profile)) await this.#finish(profile);
+    if (toggleHeld(this.actor, profile, { live: this.live })) await this.#finish(profile);
   }
 
   async removeOther(index) {
@@ -530,13 +566,19 @@ export class EquipWindow extends HandlebarsApplicationMixin(ApplicationV2) {
     if (data) event.dataTransfer.setData("text/plain", JSON.stringify(data));
   }
 
+  /** Only this actor's items can be placed; fromUuidSync throws on compendium-embedded UUIDs. */
+  #ownItem(uuid) {
+    const prefix = `${this.actor.uuid}.Item.`;
+    return uuid?.startsWith(prefix) ? this.actor.items.get(uuid.slice(prefix.length)) : null;
+  }
+
   #onDrop(event, el) {
     event.preventDefault();
     const data = foundry.applications.ux.TextEditor.implementation.getDragEventData(event);
     const target = el.dataset.drop;
     const profile = this.#view();
 
-    if (data?.type === "Item") return this.assign(target, fromUuidSync(data.uuid));
+    if (data?.type === "Item") return this.assign(target, this.#ownItem(data.uuid));
 
     if (data?.type === "pepSlot") {
       if (data.slot === target) return;
@@ -584,6 +626,11 @@ function onAssignItem(event, target) {
 function onToggleHeld(event) {
   if (isRightClick(event)) return;
   this.toggleHeld();
+}
+
+function onResolveHands(event) {
+  if (isRightClick(event)) return;
+  resolveConflicts(this.actor);
 }
 
 function onToggleOther(event, target) {

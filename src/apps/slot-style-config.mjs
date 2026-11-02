@@ -4,7 +4,7 @@
 
 import { CSS, MODULE_ID, TEMPLATES } from "../const.mjs";
 import { DEFAULT_STYLE, KEYS, slotStyle } from "../settings.mjs";
-import { HANDS, LEFT, RIGHT, slotLabel } from "../slots.mjs";
+import { HANDS, LEFT, RIGHT, SHIELD, slotLabel } from "../slots.mjs";
 import { applyStyleVars, glyphHtml } from "../style.mjs";
 
 const { ApplicationV2, HandlebarsApplicationMixin } = foundry.applications.api;
@@ -42,7 +42,7 @@ export class SlotStyleConfig extends HandlebarsApplicationMixin(ApplicationV2) {
     return Object.assign(context, {
       left: LEFT.flatMap((k) => (k === "armor" ? ["armor", "armorOver"] : [k])).map(view),
       right: RIGHT.map(view),
-      bottom: HANDS.map(view),
+      bottom: [...HANDS, SHIELD].map(view),
       color: this.draft.color,
       hue: this.draft.hue,
       tint: this.draft.tint,

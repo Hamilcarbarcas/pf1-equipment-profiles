@@ -9,6 +9,11 @@ import { registerUnequippedGuard } from "./unequipped.mjs";
 import { registerUnequippedRows } from "./sheet/unequipped-rows.mjs";
 import { SlotStyleConfig } from "./apps/slot-style-config.mjs";
 import { api } from "./api.mjs";
+import { registerBuiltinRules } from "./hands.mjs";
+import { registerHandWatch } from "./hand-watch.mjs";
+import { registerGripConfig } from "./sheet/grip-config.mjs";
+import { registerGripChips } from "./sheet/grip-chip.mjs";
+import { registerBuckler } from "./buckler.mjs";
 
 Hooks.once("init", () => {
   registerSettings();
@@ -29,5 +34,10 @@ Hooks.once("init", () => {
   registerSettingsScroll();
   registerUnequippedGuard();
   registerUnequippedRows();
+  registerBuiltinRules();
+  registerHandWatch();
+  registerGripConfig();
+  registerGripChips();
+  registerBuckler();
   game.modules.get(MODULE_ID).api = api;
 });

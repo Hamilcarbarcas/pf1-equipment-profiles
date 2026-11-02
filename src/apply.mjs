@@ -7,6 +7,7 @@ import { CSS, MODULE_ID, TEMPLATES } from "./const.mjs";
 import { KEYS, setting } from "./settings.mjs";
 import { buildPlan, sameChange, toUpdates } from "./plan.mjs";
 import { hasGates, runGates } from "./gates.mjs";
+import { confirmUnmet } from "./hand-actions.mjs";
 import { refLabel } from "./store.mjs";
 
 const pending = new Set();
@@ -29,9 +30,10 @@ function markPending(actor, on) {
  * @param {boolean} [options.gates=true]
  * @param {string} [options.source="api"]
  * @param {boolean} [options.quiet=false] - No success toasts; warnings still show (live edits, §6.6).
+ * @param {boolean} [options.askUnmet=true] - Ask before applying a profile whose rule grips are unmet (§17.6).
  * @returns {Promise<object|null>} Result, or null when cancelled.
  */
-export async function applyProfile(actor, profile, { gates = true, source = "api", quiet = false } = {}) {
+export async function applyProfile(actor, profile, { gates = true, source = "api", quiet = false, askUnmet = true } = {}) {
   if (!actor?.isOwner) {
     ui.notifications.warn("PF1EP.Warn.NotOwner", { localize: true });
     return null;
@@ -42,8 +44,10 @@ export async function applyProfile(actor, profile, { gates = true, source = "api
   }
 
   const plan = buildPlan(actor, profile);
+  const confirmed = plan.unmet.length > 0 && askUnmet;
+  if (confirmed && !(await confirmUnmet(actor, profile, plan))) return null;
   if (!plan.changes.length) {
-    report(actor, profile, { changes: [], skipped: plan.skipped, missing: plan.missing, stale: [] }, quiet);
+    report(actor, profile, { changes: [], skipped: plan.skipped, missing: plan.missing, stale: [] }, quiet, confirmed);
     return { applied: false, changes: [], skipped: plan.skipped, missing: plan.missing };
   }
 
@@ -76,7 +80,7 @@ export async function applyProfile(actor, profile, { gates = true, source = "api
 
     const result = { applied: updates.length > 0, changes, skipped: plan.skipped, missing: plan.missing, stale };
     Hooks.callAll("pf1EquipmentProfiles.apply", actor, profile, result);
-    report(actor, profile, result, quiet);
+    report(actor, profile, result, quiet, confirmed);
     if (result.applied && setting(KEYS.announce)) await announce(actor, profile, changes);
     return result;
   } finally {
@@ -90,7 +94,8 @@ function missingLabel({ ref, container }) {
   return container ? game.i18n.format("PF1EP.Report.InContainer", { item: name, container: container.name }) : name;
 }
 
-function report(actor, profile, { changes, skipped, missing, stale }, quiet = false) {
+/** `dropConfirmed`: the unmet prompt already named what the two-handed grip drops. */
+function report(actor, profile, { changes, skipped, missing, stale }, quiet = false, dropConfirmed = false) {
   const t = (key, data) => game.i18n.format(key, data);
   if (quiet) {
     // Live edits: the doll itself shows the result.
@@ -102,8 +107,8 @@ function report(actor, profile, { changes, skipped, missing, stale }, quiet = fa
 
   if (missing.length) ui.notifications.warn(t("PF1EP.Report.Missing", { profile: profile.name, items: missing.map(missingLabel).join(", ") }));
 
-  const twoHanded = skipped.filter((s) => s.reason === "twoHanded").map((s) => s.item.name);
-  if (twoHanded.length) ui.notifications.warn(t("PF1EP.Report.TwoHanded", { items: twoHanded.join(", ") }));
+  const twoHanded = skipped.filter((s) => s.reason === "twoHanded" || s.reason === "offHand").map((s) => s.item.name);
+  if (twoHanded.length && !dropConfirmed) ui.notifications.warn(t("PF1EP.Report.TwoHanded", { items: twoHanded.join(", ") }));
   const disabled = skipped.filter((s) => s.reason === "disabled").map((s) => s.item?.name ?? refLabel(s.ref));
   if (disabled.length) ui.notifications.warn(t("PF1EP.Report.Disabled", { items: disabled.join(", "), actor: actor.name }));
   const misfit = skipped.filter((s) => s.reason === "fit").map((s) => s.item.name);

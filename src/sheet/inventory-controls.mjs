@@ -8,7 +8,7 @@
 
 import { CSS } from "../const.mjs";
 import { applyProfile, isPending } from "../apply.mjs";
-import { isCurrent } from "../plan.mjs";
+import { isCurrent, requirementSuffix } from "../plan.mjs";
 import { getSelected, setSelected } from "../selection.mjs";
 import { listProfiles } from "../store.mjs";
 import { EquipWindow } from "../apps/equip-window.mjs";
@@ -53,7 +53,7 @@ function buildRow(actor) {
     const options = profiles
       .map((p) => {
         const mark = current.has(p.id) ? "✓ " : "";
-        return `<option value="${p.id}"${p.id === selectedId ? " selected" : ""}>${mark}${esc(p.name)}</option>`;
+        return `<option value="${p.id}"${p.id === selectedId ? " selected" : ""}>${mark}${esc(p.name)}${esc(requirementSuffix(actor, p))}</option>`;
       })
       .join("");
     parts.push(

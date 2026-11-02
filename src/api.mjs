@@ -8,6 +8,9 @@ import { registerGate, unregisterGate } from "./gates.mjs";
 import { isCurrent } from "./plan.mjs";
 import { deleteProfile, findProfile, listProfiles, writeProfile } from "./store.mjs";
 import { EquipWindow } from "./apps/equip-window.mjs";
+import { availableGrips, grips, registerRule, unregisterRule, usage } from "./hands.mjs";
+import { handState } from "./hand-state.mjs";
+import { resolveConflicts, setGrip } from "./hand-actions.mjs";
 
 /** Document, UUID, id or name; nothing → selected token's actor, then the assigned character. */
 export function resolveActor(actor) {
@@ -81,4 +84,20 @@ export const api = {
 
   registerGate,
   unregisterGate,
+
+  /** Handedness (§17.5). */
+  hands: {
+    usage,
+    grips,
+    availableGrips,
+    state(actor) {
+      return handState(need(actor));
+    },
+    setGrip,
+    resolve(actor) {
+      return resolveConflicts(need(actor));
+    },
+    registerRule,
+    unregisterRule,
+  },
 };

@@ -2,9 +2,10 @@
  * Build profile slots from what is equipped now. DESIGN.md §6.3.
  */
 
-import { blankSlots, itemRef } from "./store.mjs";
+import { PROFILE_VERSION, blankSlots, itemRef } from "./store.mjs";
 import { blockingToggle, disabledSet, isOff } from "./actor-slots.mjs";
-import { RINGS, isShield, liveHeld, occupancy } from "./slots.mjs";
+import { RINGS, SHIELD, occupancy } from "./slots.mjs";
+import { liveGrip } from "./hands.mjs";
 
 const itemSlot = (item, held = null) => ({ state: "item", item: itemRef(item), held });
 
@@ -14,18 +15,20 @@ export function capture(actor) {
   const slots = blankSlots();
   const other = [];
 
-  const off = occ.offHand.find((i) => !isShield(i)) ?? occ.offHand[0];
-  if (off) slots.offHand = itemSlot(off, off.type === "weapon" ? "oh" : null);
-  for (const extra of occ.offHand) {
-    if (extra !== off && extra.type === "weapon") other.push({ item: itemRef(extra), equipped: true });
-  }
+  const [off, ...spareOff] = occ.offHand;
+  if (off) slots.offHand = itemSlot(off, "oh");
+  for (const extra of spareOff) other.push({ item: itemRef(extra), equipped: true });
+
+  // The shield's grip is recorded, so a hands-free shield reads back as one (§17.2).
+  const shield = occ.shield[0];
+  if (shield) slots[SHIELD] = itemSlot(shield, liveGrip(shield));
 
   const [main, ...spare] = occ.mainHand;
-  if (main) slots.mainHand = itemSlot(main, liveHeld(main) === "2h" ? "2h" : "1h");
+  if (main) slots.mainHand = itemSlot(main, liveGrip(main) === "2h" ? "2h" : "1h");
   for (const item of spare) other.push({ item: itemRef(item), equipped: true });
 
   for (const key of Object.keys(slots)) {
-    if (key === "mainHand" || key === "offHand" || RINGS.includes(key)) continue;
+    if (key === "mainHand" || key === "offHand" || key === SHIELD || RINGS.includes(key)) continue;
     const item = occ[key]?.[0];
     if (item) slots[key] = itemSlot(item);
   }
@@ -44,5 +47,5 @@ export function capture(actor) {
     other.splice(0, other.length, ...keep);
   }
 
-  return { slots, other };
+  return { version: PROFILE_VERSION, slots, other };
 }

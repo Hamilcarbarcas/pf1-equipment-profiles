@@ -23,6 +23,7 @@ export function disabledSet(actor) {
 /** Toggle governing a doll slot or bar key. */
 export function toggleFor(key) {
   if (key === "armorOver") return "armor";
+  if (key === "shield") return "offHand";
   if (key === "ring1" || key === "ring2") return "rings";
   return key;
 }

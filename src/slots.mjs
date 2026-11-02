@@ -3,21 +3,27 @@
  */
 
 import { MODULE_ID } from "./const.mjs";
+import { canOffHand, isShield, liveGrip } from "./hands.mjs";
+
+export { isBuckler, isShield, isTwoHandedOnly, liveHeld } from "./hands.mjs";
 
 export const HANDS = ["mainHand", "offHand"];
+/** The shield arm, separate from the off hand (§17.2). */
+export const SHIELD = "shield";
 /** Doll columns (§3.1). Over Armor is drawn stacked under Armor, not as its own row. */
 export const LEFT = ["head", "shoulders", "armor", "body", "chest", "belt", "feet"];
 export const RIGHT = ["headband", "eyes", "neck", "wrists", "hands", "ring1", "ring2"];
 export const RINGS = ["ring1", "ring2"];
 
 /** Resolution order: hands first, then layout order (§4.1). */
-export const SLOTS = [...HANDS, "head", "shoulders", "armor", "armorOver", "body", "chest", "belt", "feet", ...RIGHT];
+export const SLOTS = [...HANDS, SHIELD, "head", "shoulders", "armor", "armorOver", "body", "chest", "belt", "feet", ...RIGHT];
 
 const WONDROUS = new Set(["head", "headband", "eyes", "shoulders", "neck", "chest", "body", "belt", "wrists", "hands", "feet"]);
 
 export const SLOT_ICONS = Object.freeze({
   mainHand: "fa-sword",
-  offHand: "fa-shield-halved",
+  offHand: "fa-hand",
+  shield: "fa-shield-halved",
   head: "fa-helmet-battle",
   headband: "fa-crown",
   eyes: "fa-glasses",
@@ -42,6 +48,8 @@ export function slotLabel(key) {
       return game.i18n.localize("PF1EP.Slot.MainHand");
     case "offHand":
       return game.i18n.localize("PF1EP.Slot.OffHand");
+    case "shield":
+      return game.i18n.localize("PF1EP.Slot.Shield");
     case "armor":
       return game.i18n.localize(slots.armor.armor);
     case "armorOver":
@@ -133,26 +141,17 @@ export function layerKind(item) {
 export const isHeavyArmor = (item) =>
   item?.type === "equipment" && item.subType === "armor" && item.system.equipmentSubtype === "heavyArmor";
 
-/**
- * A weapon that can only be wielded two-handed, so never off-hand (§3.3): PF1's Two-Handed type,
- * or its "Hands" field at 2 or more (how bows, crossbows, and long guns are marked).
- */
-export const isTwoHandedOnly = (item) =>
-  item?.type === "weapon" && (item.system.weaponSubtype === "2h" || (Number(item.system.hands) || 1) >= 2);
-
-export const isShield = (item) => item?.type === "equipment" && item.subType === "shield";
-
-/** PF1's misc shield subtype, commented in its proficiency map as the buckler (§2). */
-export const isBuckler = (item) => isShield(item) && item.system.equipmentSubtype === "other";
-
-export function fits(item, slot) {
+/** `profile`: judge rule grips as a profile does, met or not (§17.4). */
+export function fits(item, slot, opts = {}) {
   const region = regionOf(item);
   if (!region) return false;
   switch (slot) {
     case "mainHand":
       return item.type === "weapon";
     case "offHand":
-      return region === "hand" && !isTwoHandedOnly(item);
+      return canOffHand(item, opts);
+    case "shield":
+      return isShield(item);
     case "ring1":
     case "ring2":
       return region === "ring";
@@ -184,33 +183,13 @@ export function fitsOther(item) {
 }
 
 /**
- * Hold the main hand defaults to, and whether it can be toggled (§3.3). Only a one-handed melee
- * weapon offers a choice; ranged weapons follow their Hands field.
- */
-export function mainHandGrip(item) {
-  if (isTwoHandedOnly(item)) return { held: "2h", fixed: true };
-  switch (item.system.weaponSubtype) {
-    case "light":
-    case "ranged":
-      return { held: "1h", fixed: true };
-    default:
-      return { held: "1h", fixed: false };
-  }
-}
-
-/** Live item `held`, normalized; legacy "normal" and blank read as 1h. */
-export function liveHeld(item) {
-  const held = item.system.held;
-  return held === "2h" || held === "oh" ? held : "1h";
-}
-
-/**
  * Equipped items per slot, from live state. Main hand is every equipped weapon not held
- * off-hand and not claimed by `otherIds` (§7.2); off hand is off-hand weapons plus shields.
+ * off-hand and not claimed by `otherIds` (§7.2); off hand is off-hand weapons; shields have their
+ * own bucket (§17.2).
  * A layer is Over Armor only while a non-layer suit is worn; alone, it is the Armor (§3.6).
  */
 export function occupancy(actor, otherIds = new Set()) {
-  const occ = { mainHand: [], offHand: [], rings: [], other: [] };
+  const occ = { mainHand: [], offHand: [], shield: [], rings: [], other: [] };
   for (const key of SLOTS) if (!HANDS.includes(key) && !RINGS.includes(key)) occ[key] = [];
 
   const items = [...actor.items].sort((a, b) => (a.sort ?? 0) - (b.sort ?? 0));
@@ -220,7 +199,8 @@ export function occupancy(actor, otherIds = new Set()) {
     const region = regionOf(item);
     if (!region) continue;
     if (region === "hand") {
-      if (isShield(item) || liveHeld(item) === "oh") occ.offHand.push(item);
+      if (isShield(item)) occ.shield.push(item);
+      else if (liveGrip(item) === "oh") occ.offHand.push(item);
       else if (otherIds.has(item.id)) occ.other.push(item);
       else occ.mainHand.push(item);
     } else if (region === "ring") occ.rings.push(item);

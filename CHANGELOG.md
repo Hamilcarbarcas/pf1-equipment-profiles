@@ -33,8 +33,23 @@ matching each release tag.
 - **Unequipped weapons** are grayed out and struck through on the Combat tab, and attacking with
   one asks first, with an **Attack Anyway** option. Covers the sheet, hotbar, token HUD, and
   macros. Turn it off with the **Unequipped Weapons** setting.
+- **Shield slot:** shields have their own slot, tucked behind the off hand. A buckler, or a
+  shield while animated, leaves the off hand free, so a buckler and an off-hand weapon can be
+  worn together. Saved profiles move their shield over on their own.
+- **Grips:** the Combat tab shows the grip of each weapon and each attack with an attack roll
+  (1H, 2H, OH) beside its name; click it to switch. Weapons and attacks get a **Grips** row on the
+  Details tab to set which grips they can take, and the Held choices offer only those.
+- **Equip toggle:** a fist beside each weapon's grip on the Combat tab equips or unequips it.
+  Equipping puts the weapon in the hand(s) its grip names and unequips whatever was there.
+- **Animated shields:** while a buff with the boolean flag `animatedShield` is active, the shield
+  needs no hand. When it ends, choose **Re-grab** or **Drop**.
+- **Lances** can be wielded one-handed while a buff with the boolean flag `mounted` is active.
+  Dismounting asks to **Regrip Two-Handed** or **Stow** the lance. Profiles that need a buff say
+  so in their name, and equipping one without it asks first.
+- **Bucklers:** attacking off-hand or two-handed with a buckler worn takes –1 and, in combat,
+  costs the buckler's AC until the start of your next turn. Bows and crossbows don't count.
 - API at `game.modules.get("pf1-equipment-profiles").api`, with equip gates and hooks for other
-  modules.
+  modules, and hand rules under `api.hands`.
 
 ### Fixed
 - The character sheet's **Settings** tab no longer jumps back to the top when you tick a box on
@@ -45,4 +60,4 @@ matching each release tag.
 Earlier releases: see [GitHub Releases](https://github.com/Hamilcarbarcas/pf1-equipment-profiles/releases).
 
 ### Changed
-- The **Equipment Profiles** section is hidden on armor that isn't marked wearable over other armor. A **Show N more sections** line at the foot of the Advanced tab reveals it (shared sheet kit 1.7.0).
+- The **Equipment Profiles** section is hidden on armor that isn't marked wearable over other armor. Tick it under **Optional Sections** on the Advanced tab to show it (shared sheet kit 1.8.0).

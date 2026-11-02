@@ -28,7 +28,7 @@
       {
         "id": "lib-wrapper",
         "type": "module",
-        "reason": "Lets the unequipped-weapon prompt share PF1's item use with other modules. Without it the prompt still works, through a plain override."
+        "reason": "Lets the unequipped-weapon prompt and the buckler penalty share PF1's item use and attack rolls with other modules. Without it both still work, through plain overrides."
       }
     ]
   },

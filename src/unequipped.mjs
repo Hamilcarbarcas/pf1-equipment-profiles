@@ -1,5 +1,6 @@
 /**
- * Unequipped weapons: ask before using one. DESIGN.md §16.
+ * Unequipped weapons: ask before using one. DESIGN.md §16. Also asks before using a weapon held
+ * in a grip it can no longer take (§17.6 fallback).
  *
  * PF1 rolls an unequipped weapon like an equipped one; its `canUse` getter checks `equipped`
  * but nothing calls it. This wraps `ItemPF#use`, the one entry point the sheet, hotbar, token
@@ -8,6 +9,8 @@
 
 import { MODULE_ID } from "./const.mjs";
 import { KEYS, setting } from "./settings.mjs";
+import { invalidHeld } from "./hands.mjs";
+import { confirmInvalidUse } from "./hand-actions.mjs";
 
 const TARGET = "pf1.documents.item.ItemPF.prototype.use";
 
@@ -41,8 +44,11 @@ async function confirmUse(item) {
 }
 
 async function guardedUse(wrapped, ...args) {
-  if (!enabled || !isUnequippedWeapon(this)) return wrapped(...args);
-  if (!(await confirmUse(this))) return undefined;
+  if (enabled && isUnequippedWeapon(this)) {
+    if (!(await confirmUse(this))) return undefined;
+  } else if (this.actor && this.system?.equipped === true && invalidHeld(this)) {
+    if (!(await confirmInvalidUse(this))) return undefined;
+  }
   return wrapped(...args);
 }
 
