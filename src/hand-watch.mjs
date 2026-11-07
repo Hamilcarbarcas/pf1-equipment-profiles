@@ -42,13 +42,8 @@ const sameMap = (a, b) => {
   return [...keys].every((k) => a?.[k] === b?.[k]);
 };
 
-/** First active non-GM owner by id, else the active GM. */
 function isPrompter(actor) {
-  const owners = game.users
-    .filter((u) => u.active && !u.isGM && actor.testUserPermission(u, "OWNER"))
-    .sort((a, b) => a.id.localeCompare(b.id));
-  const user = owners[0] ?? game.users.activeGM;
-  return !!user?.isSelf;
+  return !!actor.activeOwner?.isSelf;
 }
 
 /** Collapse a burst of item changes (toggle then delete) into one check per actor. */

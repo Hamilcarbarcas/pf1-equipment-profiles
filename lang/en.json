@@ -188,6 +188,9 @@
     },
     "Buckler": {
       "BuffName": "Buckler: Arm in Use"
+    },
+    "ShieldBash": {
+      "BuffName": "Shield Bash: AC Lost"
     }
   }
 }

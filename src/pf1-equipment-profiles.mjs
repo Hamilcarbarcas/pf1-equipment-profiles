@@ -13,7 +13,7 @@ import { registerBuiltinRules } from "./hands.mjs";
 import { registerHandWatch } from "./hand-watch.mjs";
 import { registerGripConfig } from "./sheet/grip-config.mjs";
 import { registerGripChips } from "./sheet/grip-chip.mjs";
-import { registerBuckler } from "./buckler.mjs";
+import { registerShieldAC } from "./shield-ac.mjs";
 
 Hooks.once("init", () => {
   registerSettings();
@@ -38,6 +38,6 @@ Hooks.once("init", () => {
   registerHandWatch();
   registerGripConfig();
   registerGripChips();
-  registerBuckler();
+  registerShieldAC();
   game.modules.get(MODULE_ID).api = api;
 });

@@ -1,6 +1,7 @@
 /**
- * Bucklers in use: –1 on off-hand and two-handed attacks, and the buckler's AC lost until the
- * start of the next turn. DESIGN.md §17.9.
+ * Shield AC lost until the start of the next turn, for two causes:
+ * - a buckler in use: –1 on off-hand and two-handed attacks, and its AC lost (DESIGN.md §17.9);
+ * - a shield bash without Improved Shield Bash (§18).
  *
  * The AC loss is a code-built buff with a negative untyped `sac` Change, removed by this module
  * at the start of the actor's next turn rather than by PF1's duration, which counts whole rounds
@@ -8,11 +9,15 @@
  */
 
 import { MODULE_ID } from "./const.mjs";
-import { handsFreeNow, hasHeld, isBuckler } from "./hands.mjs";
+import { handsFreeNow, hasHeld, isBuckler, isShield } from "./hands.mjs";
 
 const TARGET = "pf1.actionUse.ActionUse.prototype.alterRollData";
+// Kept from when bucklers were the only cause, so buffs already on actors still end.
 const FLAG = "bucklerArm";
 const EXEMPT_GROUPS = ["bows", "crossbows"];
+const IMPROVED_BASH = "improvedShieldBash";
+
+const BUFF_NAMES = { buckler: "PF1EP.Buckler.BuffName", bash: "PF1EP.ShieldBash.BuffName" };
 
 /** ActionUse → buckler id, for the post-use hook. */
 const marked = new WeakMap();
@@ -30,10 +35,24 @@ const exempt = (item) => EXEMPT_GROUPS.some((g) => groupsOf(item).has(g));
 
 const wornBuckler = (actor) => actor?.items.find((i) => isBuckler(i) && i.system.equipped === true && !handsFreeNow(i)) ?? null;
 
-/** The buckler's AC as PF1 adds it, base plus enhancement, halved when broken (`base-character.mjs`). */
-function bucklerAC(buckler) {
-  const total = (Number(buckler.system.armor?.value) || 0) + (Number(buckler.system.armor?.enh) || 0);
-  return buckler.isBroken ? Math.floor(total / 2) : total;
+/** A shield's AC as PF1 adds it, base plus enhancement, halved when broken (`base-character.mjs`). */
+function shieldAC(shield) {
+  const total = (Number(shield.system.armor?.value) || 0) + (Number(shield.system.armor?.enh) || 0);
+  return shield.isBroken ? Math.floor(total / 2) : total;
+}
+
+/**
+ * The shield a use bashed with, when that costs its AC (§18): PF1's Bash action (melee, with an
+ * attack roll) on an equipped shield in hand. A buckler can't bash, an animated shield isn't in
+ * the hand, and Improved Shield Bash keeps the AC.
+ */
+export function bashedShield(actionUse) {
+  const item = actionUse?.item;
+  const action = actionUse?.action;
+  if (!isShield(item) || isBuckler(item) || item.system.equipped !== true || handsFreeNow(item)) return null;
+  if (action?.actionType !== "mwak" || !action.hasAttack) return null;
+  if (actionUse.actor?.itemFlags?.boolean?.[IMPROVED_BASH]) return null;
+  return item;
 }
 
 /** After PF1's own pass, `rollData.action.held` holds the attack dialog's choice. */
@@ -68,25 +87,32 @@ function alterRollData(wrapped, ...args) {
 
 const armBuffs = (actor) => actor.items.filter((i) => i.type === "buff" && i.flags?.[MODULE_ID]?.[FLAG]);
 
-async function loseAC(actor, buckler) {
+/** @param {"buckler"|"bash"} cause */
+async function loseAC(actor, shield, cause) {
   const combat = game.combat;
   if (!combat?.started || !combat.getCombatantsByActor(actor).length) return;
-  const ac = bucklerAC(buckler);
+  const ac = shieldAC(shield);
   if (ac <= 0) return;
 
-  const stamp = { combat: combat.id, round: combat.round, turn: combat.turn, buckler: buckler.id };
+  const stamp = { combat: combat.id, round: combat.round, turn: combat.turn, buckler: shield.id, cause };
   const change = { formula: `-${ac}`, target: "sac", type: "untyped", operator: "add" };
+  const name = t(BUFF_NAMES[cause]);
   const existing = armBuffs(actor)[0];
   if (existing) {
     const _id = existing._source.system.changes?.[0]?._id ?? foundry.utils.randomID();
-    await existing.update({ [`flags.${MODULE_ID}.${FLAG}`]: stamp, "system.changes": [{ ...change, _id }], "system.active": true });
+    await existing.update({
+      name,
+      [`flags.${MODULE_ID}.${FLAG}`]: stamp,
+      "system.changes": [{ ...change, _id }],
+      "system.active": true,
+    });
     return;
   }
   await actor.createEmbeddedDocuments("Item", [
     {
       type: "buff",
-      name: t("PF1EP.Buckler.BuffName"),
-      img: buckler.img,
+      name,
+      img: shield.img,
       system: { subType: "temp", active: true, changes: [change] },
       flags: { [MODULE_ID]: { [FLAG]: stamp } },
     },
@@ -114,7 +140,7 @@ async function onCombatEnd(combat) {
   }
 }
 
-export function registerBuckler() {
+export function registerShieldAC() {
   if (game.modules.get("lib-wrapper")?.active) libWrapper.register(MODULE_ID, TARGET, alterRollData, "WRAPPER");
   else {
     const proto = pf1.actionUse.ActionUse.prototype;
@@ -127,7 +153,9 @@ export function registerBuckler() {
   Hooks.on("pf1PostActionUse", (actionUse) => {
     const id = marked.get(actionUse);
     const buckler = id && actionUse.actor?.items.get(id);
-    if (buckler) loseAC(actionUse.actor, buckler).catch((err) => console.error(`${MODULE_ID} | buckler AC loss failed`, err));
+    if (buckler) loseAC(actionUse.actor, buckler, "buckler").catch((err) => console.error(`${MODULE_ID} | buckler AC loss failed`, err));
+    const bashed = buckler ? null : bashedShield(actionUse);
+    if (bashed) loseAC(actionUse.actor, bashed, "bash").catch((err) => console.error(`${MODULE_ID} | shield bash AC loss failed`, err));
   });
   Hooks.on("updateCombat", (combat, changed) => {
     onTurn(combat, changed).catch((err) => console.error(`${MODULE_ID} | buckler turn check failed`, err));

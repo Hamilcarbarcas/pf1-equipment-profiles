@@ -6,6 +6,9 @@ matching each release tag.
 ## [Unreleased]
 
 ### Added
+- **Shield bash costs the shield's AC** until the start of your next turn, as the rules say, unless
+  you have Improved Shield Bash (read from the `improvedShieldBash` boolean flag). Uses the same
+  temporary buff as the buckler's arm-in-use rule.
 - **Equipment window:** a paper doll with your portrait, icon slots for every PF1 equipment slot,
   main and off hand, two ring slots, and two bars for any number of items: one for clothing, one
   for everything else. Opened from the **Equipment** button on the Inventory tab, it equips your
@@ -54,6 +57,8 @@ matching each release tag.
 ### Fixed
 - The character sheet's **Settings** tab no longer jumps back to the top when you tick a box on
   it, including PF1's own settings.
+- Hand prompts now go to the same user as the rest of the actor's turn work (`actor.activeOwner`),
+  rather than a separate copy of its owner order.
 
 ---
 

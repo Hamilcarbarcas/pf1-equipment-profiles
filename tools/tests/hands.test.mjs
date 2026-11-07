@@ -25,7 +25,7 @@ const { capture } = await src("capture.mjs");
 const { normalize } = await src("store.mjs");
 const edit = await src("edit.mjs");
 const { handState } = await src("hand-state.mjs");
-const { registerBuckler } = await src("buckler.mjs");
+const { registerShieldAC, bashedShield } = await src("shield-ac.mjs");
 
 hands.registerBuiltinRules();
 
@@ -419,7 +419,7 @@ check("I2 a dismounted 1h lance is an invalidGrip conflict", () => {
 
 /* J. Buckler penalty (§17.9) */
 
-registerBuckler();
+registerShieldAC();
 const alter = wrappers["pf1.actionUse.ActionUse.prototype.alterRollData"];
 function attack(actor, id, held) {
   const item = actor.items.get(id);
@@ -442,6 +442,25 @@ check("J2 bows, an animated buckler, and no buckler never trigger", () => {
   assert.deepEqual(attack(b, "longsword", "2h"), []);
   const c = makeActor([w("longsword", { equipped: true }), w("buckler")]);
   assert.deepEqual(attack(c, "longsword", "2h"), []);
+});
+
+/* K. Shield bash AC loss (§18) */
+
+const bash = (actor, id, action = { actionType: "mwak", hasAttack: true }) =>
+  bashedShield({ item: actor.items.get(id), actor, action })?.id ?? null;
+
+check("K1 a bash with an equipped shield in hand costs its AC", () => {
+  const a = makeActor([w("heavy", { equipped: true })]);
+  assert.equal(bash(a, "heavy"), "heavy");
+});
+
+check("K2 Improved Shield Bash, animated, unequipped, buckler, or a non-melee action keep the AC", () => {
+  assert.equal(bash(makeActor([w("heavy", { equipped: true })], ["improvedShieldBash"]), "heavy"), null);
+  assert.equal(bash(makeActor([w("heavy", { equipped: true })], ["animatedShield"]), "heavy"), null);
+  assert.equal(bash(makeActor([w("heavy")]), "heavy"), null);
+  assert.equal(bash(makeActor([w("buckler", { equipped: true })]), "buckler"), null);
+  assert.equal(bash(makeActor([w("heavy", { equipped: true })]), "heavy", { actionType: "rwak", hasAttack: true }), null);
+  assert.equal(bash(makeActor([w("longsword", { equipped: true })]), "longsword"), null);
 });
 
 console.log(`hands.test.mjs: ${passed} checks passed`);
